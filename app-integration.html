@@ -1,0 +1,150 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="color-scheme" content="light"><meta name="description" content="Exporting Ultralytics YOLO models to Core ML, inspecting the package, running it with Vision and decoding the output tensor in Swift, as RodentStudio does."><meta name="theme-color" content="#e9f9f7"><title>Tutorial 4: From a trained model to Core ML in the app · RodentStudio Tutorials</title><link rel="canonical" href="https://seesaw-earth.github.io/RodentStudio-Tutorials/app-integration.html"><link rel="alternate" hreflang="en" href="https://seesaw-earth.github.io/RodentStudio-Tutorials/app-integration.html"><link rel="alternate" hreflang="zh-CN" href="https://seesaw-earth.github.io/RodentStudio-Tutorials/zh/app-integration.html"><link rel="icon" href="assets/favicon.png" type="image/png"><link rel="stylesheet" href="assets/styles.css"><link rel="stylesheet" href="assets/tutorial.css"><meta property="og:type" content="article"><meta property="og:title" content="Tutorial 4: From a trained model to Core ML in the app · RodentStudio Tutorials"><meta property="og:description" content="Exporting Ultralytics YOLO models to Core ML, inspecting the package, running it with Vision and decoding the output tensor in Swift, as RodentStudio does."><meta property="og:url" content="https://seesaw-earth.github.io/RodentStudio-Tutorials/app-integration.html"><meta property="og:image" content="https://seesaw-earth.github.io/RodentStudio-Tutorials/assets/app-icon.png"></head><body><a class="skip-link" href="#main">Skip to content</a><header class="nav-wrap"><nav class="nav shell" aria-label="Main navigation"><a class="brand" href="index.html"><img src="assets/app-icon.png" alt="" width="40" height="40"> RodentStudio Tutorials</a><div class="links"><a href="index.html">Overview</a><a href="mousepose6.html">MousePose6</a><a href="cylinder-v2.html">Cylinder v2</a><a href="tst-detector.html">TST detector</a><a href="app-integration.html" aria-current="page">Into the app</a><a href="citations.html">How to cite</a><a href="https://seesaw-earth.github.io/RodentStudio-Support/">Support site ↗</a><a class="language" href="zh/app-integration.html" lang="zh-CN">中文</a></div></nav></header><main id="main"><section class="page-head"><div class="shell">
+<div class="eyebrow">TUTORIAL 4 · FROM .PT TO THE APP</div>
+<h1>Turning a trained YOLO model into on-device Core ML</h1>
+<p>All three models reach RodentStudio the same way: an Ultralytics export to Core ML, a check of what was exported, a Vision request in Swift and a small decoder that maps the output tensor back to video pixels. This page walks through each step with the app's own code.</p>
+</div></section>
+<div class="shell"><article class="article">
+<nav class="toc" aria-label="On this page"><strong>On this page</strong><ol>
+<li><a href="#flow">The path from weights to measurements</a></li>
+<li><a href="#export">Step 1 · Export</a></li>
+<li><a href="#inspect">Step 2 · Inspect what you exported</a></li>
+<li><a href="#xcode">Step 3 · Add the package to Xcode</a></li>
+<li><a href="#vision">Step 4 · Run a frame through Vision</a></li>
+<li><a href="#decode">Step 5 · Decode the output tensor</a></li>
+<li><a href="#measure">Step 6 · From keypoints to measurements</a></li>
+<li><a href="#parity">Step 7 · Check parity before trusting the app</a></li>
+<li><a href="#licence">Licensing when you ship a model</a></li>
+</ol></nav>
+
+<h2 id="flow">The path from weights to measurements</h2>
+<div class="pipeline"><div class="lane" style="--n:6"><ol>
+<li><b>best.pt</b>PyTorch weights from training</li>
+<li><b>Export</b><code>format='coreml'</code>, input size, precision, NMS</li>
+<li><b>Inspect</b>Metadata, input/output shapes, weight hash</li>
+<li><b>Xcode</b><code>.mlpackage</code> compiled to <code>.mlmodelc</code></li>
+<li><b>Vision + decoder</b>Letterbox in, keypoints out, mapped to frame pixels</li>
+<li class="app"><b>Analysis</b>Pose track → assay measures → review → export</li>
+</ol></div></div>
+
+<h2 id="export">Step 1 · Export</h2>
+<p>Ultralytics converts the PyTorch model with Apple's coremltools. Exporting works on Linux (both pose models were exported in Google Colab); running a Core ML model needs macOS or iOS.</p>
+<div class="table-wrap"><table>
+<thead><tr><th>Model</th><th>Export call</th><th>Result</th></tr></thead>
+<tbody>
+<tr><td>MousePose6</td><td><code>export(format='coreml', imgsz=960, quantize=8, nms=False)</code></td><td>8-bit weights, end-to-end head, output (1, 300, 24), 2.76 MiB</td></tr>
+<tr><td>CylinderMousePoseV2</td><td><code>export(format='coreml', imgsz=640)</code></td><td>FP32, raw head, output (1, 26, 8400), 37.67 MiB</td></tr>
+<tr><td>MouseDetector</td><td>recorded args: <code>quantize=16, nms=True</code>, <code>imgsz=320</code></td><td>FP16 pipeline with NMS stage, 5.14 MiB</td></tr>
+</tbody></table></div>
+<pre><code>pip install "ultralytics[export-coreml]>=8.4.142"     # Core ML export needs numpy ≤ 2.3.5
+
+from ultralytics import YOLO
+YOLO('best_mousepose.pt').export(format='coreml', imgsz=960, quantize=8, nms=False)</code></pre>
+<ul>
+<li><strong>Input size</strong> must match the size the model was validated at; the decoder in the app hard-codes it (960 or 640).</li>
+<li><strong>Precision:</strong> 8-bit weights shrink MousePose6 to under 3 MiB. Compression can shift keypoints slightly, which is why <a href="#parity">step 7</a> exists.</li>
+<li><strong>NMS:</strong> YOLO26 pose models have an end-to-end head that needs no NMS. The detector was exported as a pipeline that includes NMS, so Vision returns finished boxes.</li>
+</ul>
+
+<h2 id="inspect">Step 2 · Inspect what you exported</h2>
+<p>Every Ultralytics export writes the training data path, library versions, input size, keypoint names and export arguments into the package. Reading them back is the quickest way to know which model an app really contains.</p>
+<pre><code>import coremltools as ct
+m = ct.models.MLModel('MousePose6_960_int8.mlpackage', skip_model_load=True)   # works on Linux too
+print(m.short_description)        # 'Ultralytics YOLO26n-pose model trained on …/dataset_local.yaml'
+md = m.user_defined_metadata
+print(md['imgsz'], md['kpt_shape'], md['kpt_names'], md['names'], md['args'], md['end2end'])
+spec = m.get_spec()
+for o in spec.description.output:
+    print(o.name, list(o.type.multiArrayType.shape))   # [1, 300, 24]</code></pre>
+<div class="table-wrap"><table>
+<thead><tr><th>Field</th><th>MousePose6_960_int8</th><th>CylinderMousePoseV2</th><th>MouseDetector</th></tr></thead>
+<tbody>
+<tr><td>Model</td><td>YOLO26n-pose</td><td>YOLO26s-pose</td><td>YOLO11n</td></tr>
+<tr><td><code>imgsz</code></td><td>960 × 960</td><td>640 × 640</td><td>320 × 320</td></tr>
+<tr><td>Head / <code>end2end</code></td><td>Pose26 / True</td><td>Pose26 / False</td><td>Detect / False</td></tr>
+<tr><td>Output</td><td>(1, 300, 24)</td><td>(1, 26, 8400)</td><td><code>confidence</code>, <code>coordinates</code></td></tr>
+<tr><td>Ultralytics</td><td>8.4.176</td><td>8.4.177</td><td>8.4.182</td></tr>
+<tr><td>Exported</td><td>2026-10-13</td><td>2026-10-14</td><td>2026-10-18</td></tr>
+<tr><td>SHA-256 of <code>weight.bin</code></td><td><code>dc8c871e…d7e3</code></td><td><code>1cb12c30…840c</code></td><td><code>0151d83b…968b</code></td></tr>
+</tbody></table></div>
+<p>The full hashes are in <a href="https://github.com/seesaw-earth/RodentStudio-Support/blob/main/source/MODEL_MANIFEST.md"><code>MODEL_MANIFEST.md</code></a>. The weights are stored with Git LFS, so after cloning the source run <code>git lfs pull</code>, then check:</p>
+<pre><code>shasum -a 256 RodentStudio/Resources/Models/MousePose6_960_int8.mlpackage/Data/com.apple.CoreML/weights/weight.bin
+# dc8c871e36ebe623d4051cb3afbc043d25b3eaa1ebcc312c518d9809a084d7e3</code></pre>
+
+<h2 id="xcode">Step 3 · Add the package to Xcode</h2>
+<p>Add the <code>.mlpackage</code> to the app target. Xcode compiles it to <code>.mlmodelc</code> at build time and generates a Swift class, but RodentStudio loads the compiled model by name so that a missing model produces a clear message instead of a build error:</p>
+<pre><code>// Core/NativeModelCatalog.swift
+enum PoseModelKind: String { case mousePose = "MousePose6_960_int8", cylinderV2 = "CylinderMousePoseV2" }
+
+static func load(_ kind: PoseModelKind) throws -> MLModel {
+    guard let url = Bundle.main.url(forResource: kind.rawValue, withExtension: "mlmodelc") else {
+        throw NSError(domain: "RodentDesktopNative", code: 404,
+                      userInfo: [NSLocalizedDescriptionKey: "Model \(kind.rawValue) is not installed."])
+    }
+    let config = MLModelConfiguration()
+    config.computeUnits = .all          // the iOS app uses .cpuAndNeuralEngine, like the Ultralytics iOS package
+    return try MLModel(contentsOf: url, configuration: config)
+}</code></pre>
+
+<h2 id="vision">Step 4 · Run a frame through Vision</h2>
+<p>Training images were letterboxed: scaled to fit the square input with the aspect ratio kept, then padded. Vision's <code>.scaleFit</code> option does the same for pose models, and the decoder undoes it.</p>
+<pre><code>// Core/NativeVideoTrackingEngine.swift (condensed)
+let request = VNCoreMLRequest(model: try VNCoreMLModel(for: model))
+request.imageCropAndScaleOption = .scaleFit          // keep aspect ratio, pad to the square input
+try VNImageRequestHandler(cvPixelBuffer: frame, orientation: .up, options: [:]).perform([request])
+let tensor = (request.results ?? [])
+    .compactMap { $0 as? VNCoreMLFeatureValueObservation }
+    .compactMap { $0.featureValue.multiArrayValue }.first</code></pre>
+<p>The app wraps this in a small class that, after an isolated Vision error, rebuilds the request and retries the same frame once. It never switches to another model or compute unit.</p>
+
+<h2 id="decode">Step 5 · Decode the output tensor</h2>
+<p>The two pose models return differently shaped tensors, so the decoder needs to know which one it has:</p>
+<div class="table-wrap"><table>
+<thead><tr><th>Model</th><th>Shape</th><th>One candidate</th><th>Keypoints start at</th></tr></thead>
+<tbody>
+<tr><td>MousePose6 (end-to-end)</td><td>(1, 300, 24)</td><td><code>x1, y1, x2, y2, score, class</code>, then 6 × <code>(x, y, conf)</code></td><td>index 6</td></tr>
+<tr><td>CylinderMousePoseV2 (raw)</td><td>(1, 26, 8400)</td><td><code>cx, cy, w, h, score</code>, then 7 × <code>(x, y, conf)</code>; channels first</td><td>index 5</td></tr>
+</tbody></table></div>
+<p>Both analyses assume one mouse, so the decoder keeps the single highest-scoring candidate above 0.25 instead of running NMS. For MousePose6 it looks only at the first 30 candidates that pass the threshold, matching the behaviour of the Ultralytics iOS package used by the iPhone app. Coordinates are then mapped from the padded square back to the video frame:</p>
+<pre><code>// NativePoseDecoder.decode (condensed)
+let size  = kind == .mousePose ? 960.0 : 640.0
+let scale = min(size / Double(imageWidth), size / Double(imageHeight))
+let padX  = (size - Double(imageWidth)  * scale) / 2
+let padY  = (size - Double(imageHeight) * scale) / 2
+var best: Int? = nil, bestScore = 0.25, passed = 0
+for i in 0..&lt;candidates {
+    let c = value(i, 4)
+    guard c.isFinite, c > 0.25 else { continue }
+    if c > bestScore { best = i; bestScore = c }
+    if kind == .mousePose { passed += 1; if passed == 30 { break } }
+}
+let start = kind == .mousePose ? 6 : 5
+for k in 0..&lt;(kind == .mousePose ? 6 : 7) {
+    let x = (value(best!, start + 3*k)     - padX) / scale    // back to frame pixels
+    let y = (value(best!, start + 3*k + 1) - padY) / scale
+    let p =  value(best!, start + 3*k + 2)                    // keypoint confidence, clamped to 0…1
+    // points that fall outside the frame are stored as missing
+}</code></pre>
+<p>The real accessor reads the tensor through its strides, accepts either axis order, and handles FP16, FP32 and FP64 outputs, so the same code works for both packages. If the tensor has neither 24 nor 26 features it stops with an error rather than guessing.</p>
+
+<h2 id="measure">Step 6 · From keypoints to measurements</h2>
+<p>Each frame yields a list of points with confidences. RodentStudio stores them as a pose track with the video timestamps, then runs the analysis code ported from the iOS apps: RodentPose 1.0 analyzers for MousePose6 and RodentLimb 1.1.2 analyzers for CylinderMousePoseV2. Settings that change results are kept with each analysis. For the RodentLimb workflows, for example, the app writes a methods paragraph that names the model and states the keypoint confidence threshold below which points count as missing, the longest gap that is linearly interpolated, and the median and moving-average smoothing applied before measures are computed. In normal workflows the model is not a user choice; each assay uses the model it was designed for.</p>
+
+<h2 id="parity">Step 7 · Check parity before trusting the app</h2>
+<p>Export, compression and a different resizing path can each move keypoints. Before relying on a new or changed package, run the same held-out images through the PyTorch weights and the Core ML package and compare. The MousePose6 export notebook prepared exactly this check:</p>
+<pre><code># on a Mac, inside the validation pack produced by MousePose_iOS_Export_v1
+python3 -m venv .venv &amp;&amp; source .venv/bin/activate
+pip install "ultralytics[export-coreml]>=8.4.142"
+python validate_on_mac.py      # detection rate, PCK@0.1L and median error for .pt, FP16 and INT8 on 300 test images</code></pre>
+<ul>
+<li>Confirm input size, keypoint names and order, and output shape against the metadata (step 2).</li>
+<li>Compare per-point error between <code>.pt</code> and Core ML on the same images; agree on a tolerance in advance (the notebook used about one PCK point).</li>
+<li>Open a few videos in RodentStudio's review view and check the overlaid points, especially left/right.</li>
+<li>Record the package hash with your results.</li>
+</ul>
+<div class="notice warn"><strong>Not yet documented.</strong> The results of <code>validate_on_mac.py</code> for the shipped MousePose6 package are not in the materials reviewed for these tutorials.</div>
+
+<h2 id="licence">Licensing when you ship a model</h2>
+<p>Ultralytics distributes YOLO under AGPL-3.0, with an Enterprise licence for closed-source use. Its licence page says the AGPL terms cover models produced by its training code, and that an Enterprise licence is needed to use YOLO without open-sourcing the whole project. RodentStudio's source is published under AGPL-3.0, and the iOS app also uses the AGPL-3.0 Ultralytics iOS package. Dataset terms are separate from software terms, and two of MousePose6's training datasets are CC BY-NC-SA 4.0 (non-commercial): see the <a href="citations.html#licences">licence table</a>. This is a summary, not legal advice.</p>
+<nav class="pager" aria-label="Pages"><a class="prev" href="tst-detector.html"><small>← Previous</small>Tutorial 3: The tail-suspension mouse detector</a><a class="next" href="citations.html"><small>Next →</small>How to cite the datasets, papers and software</a></nav>
+</article></div>
+</main><footer class="footer"><div class="shell footer-grid"><div><strong>RodentStudio Tutorials</strong><div><small>© 2026 Ziqing Shi · Developer: Ziqing Shi</small></div><div><small>Independent research software. Model outputs require scientific validation.</small></div></div><div class="footer-links"><a href="https://seesaw-earth.github.io/RodentStudio-Support/">Support site</a><a href="references.bib">references.bib</a><a href="https://github.com/seesaw-earth/RodentStudio-Tutorials">Source on GitHub</a><a href="https://seesaw-earth.github.io/RodentStudio-Support/legal.html">Legal &amp; notices</a></div></div></footer></body></html>

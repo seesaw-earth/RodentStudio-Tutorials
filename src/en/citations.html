@@ -1,0 +1,144 @@
+<section class="page-head"><div class="shell">
+<div class="eyebrow">REFERENCE</div>
+<h1>How to cite the data, papers and software</h1>
+<p>What to cite for each model, the full reference list, a licence summary, BibTeX and an example methods paragraph. Details were checked against Zenodo, DataCite, Crossref and publisher pages on 20 October 2026.</p>
+</div></section>
+<div class="shell"><article class="article">
+<nav class="toc" aria-label="On this page"><strong>On this page</strong><ol>
+<li><a href="#principles">Three rules for citing data</a></li>
+<li><a href="#use-mousepose6">If you used MousePose6</a></li>
+<li><a href="#use-cylinder">If you used CylinderMousePoseV2</a></li>
+<li><a href="#use-detector">If you used the TST detector</a></li>
+<li><a href="#use-checks">If you cite the checks in these tutorials</a></li>
+<li><a href="#methods">Example methods paragraph</a></li>
+<li><a href="#refs">Reference list</a></li>
+<li><a href="#licences">Licence summary</a></li>
+<li><a href="#bibtex">BibTeX</a></li>
+<li><a href="#open">Open questions</a></li>
+</ol></nav>
+
+<h2 id="principles">Three rules for citing data</h2>
+<ol>
+<li><strong>Cite the dataset itself, by its DOI,</strong> in the reference list, and also the paper its authors ask you to cite. A dataset and its paper are separate works.</li>
+<li><strong>Cite software with its version.</strong> “Ultralytics YOLO26”, “RodentStudio 0.7.1”, “coremltools 9.0”: results can change between versions.</li>
+<li><strong>Say what you changed and where labels came from.</strong> CC BY 4.0 requires credit, a link to the licence and an indication of changes. Here the labels were harmonized and filtered from DeepLabCut and JAX-network predictions; write that, rather than implying human annotation.</li>
+</ol>
+
+<h2 id="use-mousepose6">If you used MousePose6 (RodentPose workflows)</h2>
+<div class="table-wrap"><table>
+<thead><tr><th>Cite</th><th>Why</th><th>Reference</th></tr></thead>
+<tbody>
+<tr><td>RodentStudio, with version</td><td>The software that ran the model and computed your measures</td><td><a href="#r-rodentstudio">[S1]</a></td></tr>
+<tr><td>Ultralytics YOLO26</td><td>Model architecture, pretrained weights, training and export code</td><td><a href="#r-yolo26">[S2]</a></td></tr>
+<tr><td>ETH open-field dataset and ETH MB / LDB / FC dataset</td><td>Training videos and DeepLabCut pose files (CC BY 4.0)</td><td><a href="#r-vz2023">[D1]</a>, <a href="#r-vz2024d">[D2]</a></td></tr>
+<tr><td>BehaviorFlow paper</td><td>Describes the ETH recordings and their pose estimation</td><td><a href="#r-vz2024">[P1]</a></td></tr>
+<tr><td>JAX strain-survey and BxD datasets</td><td>Training videos and JAX pose files</td><td><a href="#r-jabs-ss">[D3]</a>, <a href="#r-jabs-bxd">[D4]</a></td></tr>
+<tr><td>JABS paper and the JAX pose-network paper</td><td>Describe the JAX datasets and the network that produced their keypoints</td><td><a href="#r-jabs">[P2]</a>, <a href="#r-sheppard">[P3]</a></td></tr>
+<tr><td>DeepLabCut</td><td>The ETH labels are DeepLabCut predictions</td><td><a href="#r-mathis">[P4]</a>, <a href="#r-nath">[P5]</a></td></tr>
+<tr><td>COCO (recommended)</td><td>The starting weights were pretrained on COCO keypoints</td><td><a href="#r-coco">[P6]</a></td></tr>
+</tbody></table></div>
+<p>The strain-survey record names Geuther et al. 2019 <a href="#r-geuther2019">[P7]</a> as its related publication, so cite it together with [D3]. The BxD record lists none. The strain-survey files are tagged by the JAX studies that used them (for example Gait, Grooming, JABS600, JABS1200); Geuther et al. 2021 <a href="#r-geuther2021">[P8]</a> is the grooming study. Dataverse's own suggested citations are:</p>
+<pre><code>Kumar, Vivek; Brian Geuther; Sean Deats, 2024, "The Jackson Laboratory (JAX) - Kumar Lab Mouse Strain Survey of Behavior in the Open Field Arena (Video Dataset)", https://doi.org/10.7910/DVN/SAPNJG, Harvard Dataverse, V1, UNF:6:OiPvgrf6RjsZOSxB9/nVEA== [fileUNF]
+
+Kumar, Vivek; Deats, Sean, 2025, "The Jackson Laboratory (JAX) - Kumar Lab Mouse BxD Survey of Behavior in the Open Field Arena (Video Dataset)", https://doi.org/10.7910/DVN/RQYI04, Harvard Dataverse, V1, UNF:6:r9GfOhUT7LK/e1KHwwhuHQ== [fileUNF]</code></pre>
+
+<h2 id="use-cylinder">If you used CylinderMousePoseV2 (RodentLimb workflows)</h2>
+<div class="table-wrap"><table>
+<thead><tr><th>Cite</th><th>Why</th><th>Reference</th></tr></thead>
+<tbody>
+<tr><td>RodentStudio, with version</td><td>Ran the model and the RodentLimb analyzers</td><td><a href="#r-rodentstudio">[S1]</a></td></tr>
+<tr><td>Ultralytics YOLO26</td><td>Model architecture, pretrained weights, training and export code</td><td><a href="#r-yolo26">[S2]</a></td></tr>
+<tr><td>DeepLabCut</td><td>The teacher model that produced 20,000 of the training labels</td><td><a href="#r-mathis">[P4]</a>, <a href="#r-nath">[P5]</a></td></tr>
+<tr><td>The lab's cylinder recordings</td><td>Training data; cite the dataset if it is published</td><td><span class="badge todo">To add if published</span></td></tr>
+<tr><td>COCO (recommended)</td><td>Pretraining of the starting weights</td><td><a href="#r-coco">[P6]</a></td></tr>
+</tbody></table></div>
+
+<h2 id="use-detector">If you used the TST detector</h2>
+<p>Cite RodentStudio <a href="#r-rodentstudio">[S1]</a> and Ultralytics YOLO11 <a href="#r-yolo11">[S3]</a>, and report whether the YOLO or the classical detector was used (RodentStudio's exports record this). For RodentFlow workflows, no model citation is needed; describe the classical tracker and cite RodentStudio.</p>
+
+<h2 id="use-checks">If you cite the checks in these tutorials</h2>
+<ul>
+<li>CalMS21 zero-shot test: the CalMS21 dataset <a href="#r-calms-data">[D5]</a> and paper <a href="#r-calms">[P9]</a>; the MARS keypoints come from MARS <a href="#r-mars">[P10]</a>.</li>
+<li>Elevated-plus-maze pilot: Sturman et al. 2020 <a href="#r-sturman">[P11]</a> and the video record <a href="#r-sturman-data">[D6]</a>; DLCAnalyzer <a href="#r-dlcanalyzer">[S5]</a> if you used its scripts.</li>
+<li>PhysioNet demonstration video (cylinder v1): the dataset <a href="#r-physionet-data">[D7]</a> and, as PhysioNet asks, the PhysioNet platform paper <a href="#r-physionet">[P12]</a>.</li>
+<li>Exporting to Core ML: coremltools <a href="#r-coremltools">[S4]</a>.</li>
+</ul>
+
+<h2 id="methods">Example methods paragraph</h2>
+<p>Adapt this to what you actually did; replace everything in square brackets.</p>
+<div class="notice"><p><em>Pose estimation.</em> Six body keypoints (nose, left ear, right ear, neck, body centre and tail base) were estimated in every frame with the MousePose6 model (<code>MousePose6_960_int8</code>, a YOLO26n-pose network [S2] with 8-bit weights) run on-device through Core ML in RodentStudio [version] [S1]. The model was trained on 6,140 frames from 36 videos of four public top-view datasets [D1–D4], using as labels the DeepLabCut [P4, P5] and JAX pose-network [P3] predictions released with those datasets after harmonizing them to a common keypoint set and filtering them for quality; the labels are therefore model-derived rather than human annotations. On held-out videos from the same datasets it detected 94.6 % of mice, and 96.1 % of the keypoints of detected mice lay within 0.1 body lengths of the reference labels. We checked keypoint placement on [number] randomly chosen frames per video from our own recordings [and compared the derived measures with blinded manual scoring of [number] videos].</p></div>
+
+<h2 id="refs">Reference list</h2>
+<h3>Software</h3>
+<ol class="refs">
+<li id="r-rodentstudio"><span class="tag">S1</span>Shi, Z. (2026). <em>RodentStudio</em> (Version [used]) [Computer software]. <a href="https://github.com/seesaw-earth/RodentStudio-Support">https://github.com/seesaw-earth/RodentStudio-Support</a>. Source licence: AGPL-3.0.</li>
+<li id="r-yolo26"><span class="tag">S2</span>Jocher, G., Qiu, J., Liu, M., Lyu, S., Akyon, F. C., &amp; Kalfaoglu, M. E. (2026). Ultralytics YOLO26: Unified real-time end-to-end vision models. <em>arXiv</em>, 2606.03748. <a href="https://doi.org/10.48550/arXiv.2606.03748">https://doi.org/10.48550/arXiv.2606.03748</a>. Software: <a href="https://github.com/ultralytics/ultralytics">https://github.com/ultralytics/ultralytics</a> (AGPL-3.0 or Ultralytics Enterprise licence).</li>
+<li id="r-yolo11"><span class="tag">S3</span>Jocher, G., &amp; Qiu, J. (2024). <em>Ultralytics YOLO11</em> (Version 11.0.0) [Computer software]. <a href="https://github.com/ultralytics/ultralytics">https://github.com/ultralytics/ultralytics</a>. AGPL-3.0.</li>
+<li id="r-coremltools"><span class="tag">S4</span>Apple Inc. (2025). <em>coremltools</em> (Version 9.0) [Computer software]. <a href="https://github.com/apple/coremltools">https://github.com/apple/coremltools</a>. BSD-3-Clause.</li>
+<li id="r-dlcanalyzer"><span class="tag">S5</span>ETHZ-INS. <em>DLCAnalyzer</em> [Computer software]. <a href="https://github.com/ETHZ-INS/DLCAnalyzer">https://github.com/ETHZ-INS/DLCAnalyzer</a>. GPL-3.0.</li>
+</ol>
+<h3>Datasets</h3>
+<ol class="refs">
+<li id="r-vz2023"><span class="tag">D1</span>von Ziegler, L. M., Roessler, F. K., Sturman, O., &amp; Bohacek, J. (2023). <em>Raw video and pose estimation data of top view open field mouse behavior recordings of acute and chronic stress models</em> [Data set]. Zenodo. <a href="https://doi.org/10.5281/zenodo.8186065">https://doi.org/10.5281/zenodo.8186065</a>. CC BY 4.0.</li>
+<li id="r-vz2024d"><span class="tag">D2</span>von Ziegler, L., Roessler, F. K., Sturman, O., Waag, R., &amp; Bohacek, J. (2024). <em>Additional raw video and pose estimation data of top view mouse behavior recordings (marble burying test, light-dark box, fear conditioning box) of acute and chronic stress models</em> [Data set]. Zenodo. <a href="https://doi.org/10.5281/zenodo.11235068">https://doi.org/10.5281/zenodo.11235068</a>. CC BY 4.0.</li>
+<li id="r-jabs-ss"><span class="tag">D3</span>Kumar, V., Geuther, B., &amp; Deats, S. (2024). <em>The Jackson Laboratory (JAX) - Kumar Lab Mouse Strain Survey of Behavior in the Open Field Arena (Video Dataset)</em> (V1) [Data set]. Harvard Dataverse. <a href="https://doi.org/10.7910/DVN/SAPNJG">https://doi.org/10.7910/DVN/SAPNJG</a>. UNF:6:OiPvgrf6RjsZOSxB9/nVEA== [fileUNF]. CC BY-NC-SA 4.0. The dataset page showed version 1.2; its suggested citation reads “V1”.</li>
+<li id="r-jabs-bxd"><span class="tag">D4</span>Kumar, V., &amp; Deats, S. (2025). <em>The Jackson Laboratory (JAX) - Kumar Lab Mouse BxD Survey of Behavior in the Open Field Arena (Video Dataset)</em> (V1) [Data set]. Harvard Dataverse. <a href="https://doi.org/10.7910/DVN/RQYI04">https://doi.org/10.7910/DVN/RQYI04</a>. UNF:6:r9GfOhUT7LK/e1KHwwhuHQ== [fileUNF]. CC BY-NC-SA 4.0. Version 1.0.</li>
+<li id="r-calms-data"><span class="tag">D5</span>Sun, J. J., Karigo, T., Anderson, D. J., Perona, P., Yue, Y., &amp; Kennedy, A. (2021). <em>Caltech Mouse Social Interactions (CalMS21) Dataset</em> (Version 1.0) [Data set]. CaltechDATA. <a href="https://doi.org/10.22002/D1.1991">https://doi.org/10.22002/D1.1991</a>. CC BY 4.0.</li>
+<li id="r-sturman-data"><span class="tag">D6</span>von Ziegler, L., Sturman, O., &amp; Bohacek, J. (2020). <em>Videos for deeplabcut, noldus ethovision X14 and TSE multi conditioning systems comparisons</em> [Data set]. Zenodo. <a href="https://doi.org/10.5281/zenodo.3608658">https://doi.org/10.5281/zenodo.3608658</a>. CC BY 4.0.</li>
+<li id="r-physionet-data"><span class="tag">D7</span>Jiang, Y., Venkitaraman, S., Jung, H. R., Blackwood, S., Lee, J., Jadav, A. A., Lee, D., Kamal, A., &amp; Landsness, E. C. (2026). <em>Longitudinal Cylinder Rearing Behavioral Data in a Mouse Stroke Model Across Multiple Drug Treatments</em> (Version 1.0.0) [Data set]. PhysioNet. <a href="https://doi.org/10.13026/8bnm-6e37">https://doi.org/10.13026/8bnm-6e37</a>. ODC-By 1.0.</li>
+</ol>
+<h3>Papers</h3>
+<ol class="refs">
+<li id="r-vz2024"><span class="tag">P1</span>von Ziegler, L. M., Roessler, F. K., Sturman, O., Waag, R., Privitera, M., Duss, S. N., O'Connor, E. C., &amp; Bohacek, J. (2024). Analysis of behavioral flow resolves latent phenotypes. <em>Nature Methods</em>, 21(12), 2376–2387. <a href="https://doi.org/10.1038/s41592-024-02500-6">https://doi.org/10.1038/s41592-024-02500-6</a></li>
+<li id="r-jabs"><span class="tag">P2</span>Choudhary, A., Geuther, B. Q., Sproule, T. J., Beane, G., Kohar, V., Trapszo, J., &amp; Kumar, V. (2026). JAX Animal Behavior System (JABS), a genetics-informed, end-to-end advanced behavioral phenotyping platform for the laboratory mouse. <em>eLife</em>, 14, RP107259. <a href="https://doi.org/10.7554/eLife.107259">https://doi.org/10.7554/eLife.107259</a></li>
+<li id="r-sheppard"><span class="tag">P3</span>Sheppard, K., Gardin, J., Sabnis, G. S., Peer, A., Darrell, M., Deats, S., Geuther, B., Lutz, C. M., &amp; Kumar, V. (2022). Stride-level analysis of mouse open field behavior using deep-learning-based pose estimation. <em>Cell Reports</em>, 38(2), 110231. <a href="https://doi.org/10.1016/j.celrep.2021.110231">https://doi.org/10.1016/j.celrep.2021.110231</a></li>
+<li id="r-mathis"><span class="tag">P4</span>Mathis, A., Mamidanna, P., Cury, K. M., Abe, T., Murthy, V. N., Mathis, M. W., &amp; Bethge, M. (2018). DeepLabCut: Markerless pose estimation of user-defined body parts with deep learning. <em>Nature Neuroscience</em>, 21(9), 1281–1289. <a href="https://doi.org/10.1038/s41593-018-0209-y">https://doi.org/10.1038/s41593-018-0209-y</a></li>
+<li id="r-nath"><span class="tag">P5</span>Nath, T., Mathis, A., Chen, A. C., Patel, A., Bethge, M., &amp; Mathis, M. W. (2019). Using DeepLabCut for 3D markerless pose estimation across species and behaviors. <em>Nature Protocols</em>, 14(7), 2152–2176. <a href="https://doi.org/10.1038/s41596-019-0176-0">https://doi.org/10.1038/s41596-019-0176-0</a></li>
+<li id="r-coco"><span class="tag">P6</span>Lin, T.-Y., Maire, M., Belongie, S., Hays, J., Perona, P., Ramanan, D., Dollár, P., &amp; Zitnick, C. L. (2014). Microsoft COCO: Common objects in context. In <em>Computer Vision – ECCV 2014</em> (Lecture Notes in Computer Science, Vol. 8693, pp. 740–755). Springer. <a href="https://doi.org/10.1007/978-3-319-10602-1_48">https://doi.org/10.1007/978-3-319-10602-1_48</a></li>
+<li id="r-geuther2019"><span class="tag">P7</span>Geuther, B. Q., Deats, S. P., Fox, K. J., Murray, S. A., Braun, R. E., White, J. K., Chesler, E. J., Lutz, C. M., &amp; Kumar, V. (2019). Robust mouse tracking in complex environments using neural networks. <em>Communications Biology</em>, 2, 124. <a href="https://doi.org/10.1038/s42003-019-0362-1">https://doi.org/10.1038/s42003-019-0362-1</a></li>
+<li id="r-geuther2021"><span class="tag">P8</span>Geuther, B. Q., Peer, A., He, H., Sabnis, G., Philip, V. M., &amp; Kumar, V. (2021). Action detection using a neural network elucidates the genetics of mouse grooming behavior. <em>eLife</em>, 10, e63207. <a href="https://doi.org/10.7554/eLife.63207">https://doi.org/10.7554/eLife.63207</a></li>
+<li id="r-calms"><span class="tag">P9</span>Sun, J. J., Karigo, T., Chakraborty, D., Mohanty, S. P., Wild, B., Sun, Q., Chen, C., Anderson, D. J., Perona, P., Yue, Y., &amp; Kennedy, A. (2021). The Multi-Agent Behavior Dataset: Mouse dyadic social interactions. <em>Proceedings of the Neural Information Processing Systems Track on Datasets and Benchmarks</em>. <a href="https://arxiv.org/abs/2104.02710">arXiv:2104.02710</a></li>
+<li id="r-mars"><span class="tag">P10</span>Segalin, C., Williams, J., Karigo, T., Hui, M., Zelikowsky, M., Sun, J. J., Perona, P., Anderson, D. J., &amp; Kennedy, A. (2021). The Mouse Action Recognition System (MARS) software pipeline for automated analysis of social behaviors in mice. <em>eLife</em>, 10, e63720. <a href="https://doi.org/10.7554/eLife.63720">https://doi.org/10.7554/eLife.63720</a></li>
+<li id="r-sturman"><span class="tag">P11</span>Sturman, O., von Ziegler, L., Schläppi, C., Akyol, F., Privitera, M., Slominski, D., Grimm, C., Thieren, L., Zerbi, V., Grewe, B., &amp; Bohacek, J. (2020). Deep learning-based behavioral analysis reaches human accuracy and is capable of outperforming commercial solutions. <em>Neuropsychopharmacology</em>, 45(11), 1942–1952. <a href="https://doi.org/10.1038/s41386-020-0776-y">https://doi.org/10.1038/s41386-020-0776-y</a></li>
+<li id="r-physionet"><span class="tag">P12</span>Pollard, T., Moody, B. E., Lehman, L. H., Gow, B. J., Fernandes, C., Xie, C., Johnson, A., Mark, R. G., &amp; Heldt, T. (2026). PhysioNet as a global platform for biomedical research. <em>Nature Health</em>. <a href="https://doi.org/10.1038/s44360-026-00096-z">https://doi.org/10.1038/s44360-026-00096-z</a></li>
+</ol>
+
+<h2 id="licences">Licence summary</h2>
+<div class="table-wrap"><table>
+<thead><tr><th>Resource</th><th>Licence or terms</th><th>What it means here</th></tr></thead>
+<tbody>
+<tr><td>ETH datasets [D1], [D2], [D6]</td><td>CC BY 4.0</td><td>Reuse, including derived labels and models, is allowed with attribution, a licence link and a note of changes.</td></tr>
+<tr class="highlight"><td>JAX datasets [D3], [D4]</td><td>CC BY-NC-SA 4.0</td><td>Attribution, non-commercial use only, adaptations under the same licence. 3,500 MousePose6 training images come from these datasets, so treat MousePose6 as non-commercial unless JAX grants permission; see <a href="mousepose6.html#sources">tutorial 1</a>.</td></tr>
+<tr><td>JAX pose model and its training data (Zenodo record 6380163)</td><td>“Other (Non-Commercial)”</td><td>Applies to that release itself. MousePose6 used the keypoint files shipped with [D3] and [D4], not this release; those files are themselves CC BY-NC-SA 4.0.</td></tr>
+<tr><td>CalMS21 [D5]</td><td>CC BY 4.0</td><td>Used only for an external check.</td></tr>
+<tr><td>PhysioNet dataset [D7]</td><td>Open Data Commons Attribution (ODC-By) 1.0</td><td>Attribution required; used only for a demonstration video.</td></tr>
+<tr><td>Ultralytics YOLO code and pretrained weights [S2], [S3]</td><td>AGPL-3.0, or Ultralytics Enterprise licence</td><td>Ultralytics states that the AGPL terms extend to models trained with its code; closed-source distribution needs an Enterprise licence.</td></tr>
+<tr><td>coremltools [S4]</td><td>BSD-3-Clause</td><td>Permissive.</td></tr>
+<tr><td>DLCAnalyzer [S5]</td><td>GPL-3.0</td><td>Used only in the evaluation pilot.</td></tr>
+<tr><td>RodentStudio source [S1]</td><td>AGPL-3.0</td><td>The app's licence for store distribution is set separately; see the support site's legal page.</td></tr>
+</tbody></table></div>
+<p class="caption">This table summarises licence statements; it is not legal advice.</p>
+
+<h2 id="bibtex">BibTeX</h2>
+<p>All entries are in <a href="references.bib">references.bib</a>. The keys are the same as below.</p>
+<pre><code>@misc{shi2026rodentstudio,
+  author = {Shi, Ziqing}, title = {RodentStudio}, year = {2026}, note = {Version [used]. AGPL-3.0},
+  url = {https://github.com/seesaw-earth/RodentStudio-Support}}
+@article{jocher2026yolo26,
+  author = {Jocher, Glenn and Qiu, Jing and Liu, Mengyu and Lyu, Shuai and Akyon, Fatih Cagatay and Kalfaoglu, Muhammet Esat},
+  title = {Ultralytics {YOLO26}: Unified Real-Time End-to-End Vision Models}, journal = {arXiv preprint arXiv:2606.03748},
+  year = {2026}, doi = {10.48550/arXiv.2606.03748}}
+@misc{vonziegler2023oft,
+  author = {von Ziegler, Lukas M. and Roessler, Fabienne K. and Sturman, Oliver and Bohacek, Johannes},
+  title = {Raw video and pose estimation data of top view open field mouse behavior recordings of acute and chronic stress models},
+  publisher = {Zenodo}, year = {2023}, doi = {10.5281/zenodo.8186065}}
+…  (references.bib has all 24 entries)</code></pre>
+
+<h2 id="open">Open questions</h2>
+<ul>
+<li>Permission from JAX for any commercial use of MousePose6, or a retrained model without [D3] and [D4].</li>
+<li>Whether the lab's cylinder recordings used for CylinderMousePoseV2 are, or will be, published.</li>
+<li>Training data, settings and evaluation of the bundled TST detector.</li>
+</ul>
+<!--PAGER-->
+</article></div>

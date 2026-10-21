@@ -1,0 +1,23 @@
+cff-version: 1.2.0
+message: >-
+  If you use these tutorials, please cite them as below. Please also cite the
+  datasets, papers and software they describe; see references.bib.
+title: "RodentStudio model tutorials: from open data to an offline Mac app"
+abstract: >-
+  Bilingual (English/Chinese) tutorials documenting the provenance, training,
+  evaluation, Core ML export and app integration of the pose and detection
+  models bundled with RodentStudio, with a reference list, licence summary and
+  BibTeX for every dataset, paper and software package involved.
+authors:
+  - family-names: Shi
+    given-names: Ziqing
+version: 0.1.0
+url: "https://seesaw-earth.github.io/RodentStudio-Tutorials/"
+repository-code: "https://github.com/seesaw-earth/RodentStudio-Tutorials"
+keywords:
+  - pose estimation
+  - mouse behavior
+  - YOLO
+  - Core ML
+  - DeepLabCut
+  - data provenance

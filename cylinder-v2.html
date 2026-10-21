@@ -1,0 +1,159 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="color-scheme" content="light"><meta name="description" content="How the seven-keypoint cylinder-test model was distilled from a lab DeepLabCut project with cleaned pseudo-labels and evaluated on held-out human labels."><meta name="theme-color" content="#e9f9f7"><title>Tutorial 2: Distilling DeepLabCut into CylinderMousePoseV2 · RodentStudio Tutorials</title><link rel="canonical" href="https://seesaw-earth.github.io/RodentStudio-Tutorials/cylinder-v2.html"><link rel="alternate" hreflang="en" href="https://seesaw-earth.github.io/RodentStudio-Tutorials/cylinder-v2.html"><link rel="alternate" hreflang="zh-CN" href="https://seesaw-earth.github.io/RodentStudio-Tutorials/zh/cylinder-v2.html"><link rel="icon" href="assets/favicon.png" type="image/png"><link rel="stylesheet" href="assets/styles.css"><link rel="stylesheet" href="assets/tutorial.css"><meta property="og:type" content="article"><meta property="og:title" content="Tutorial 2: Distilling DeepLabCut into CylinderMousePoseV2 · RodentStudio Tutorials"><meta property="og:description" content="How the seven-keypoint cylinder-test model was distilled from a lab DeepLabCut project with cleaned pseudo-labels and evaluated on held-out human labels."><meta property="og:url" content="https://seesaw-earth.github.io/RodentStudio-Tutorials/cylinder-v2.html"><meta property="og:image" content="https://seesaw-earth.github.io/RodentStudio-Tutorials/assets/app-icon.png"></head><body><a class="skip-link" href="#main">Skip to content</a><header class="nav-wrap"><nav class="nav shell" aria-label="Main navigation"><a class="brand" href="index.html"><img src="assets/app-icon.png" alt="" width="40" height="40"> RodentStudio Tutorials</a><div class="links"><a href="index.html">Overview</a><a href="mousepose6.html">MousePose6</a><a href="cylinder-v2.html" aria-current="page">Cylinder v2</a><a href="tst-detector.html">TST detector</a><a href="app-integration.html">Into the app</a><a href="citations.html">How to cite</a><a href="https://seesaw-earth.github.io/RodentStudio-Support/">Support site ↗</a><a class="language" href="zh/cylinder-v2.html" lang="zh-CN">中文</a></div></nav></header><main id="main"><section class="page-head"><div class="shell">
+<div class="eyebrow">TUTORIAL 2 · CYLINDERMOUSEPOSEV2</div>
+<h1>Distilling a lab DeepLabCut model into a fast YOLO pose model</h1>
+<p>CylinderMousePoseV2 tracks the paws, nose, mouth and tail base of a mouse in the cylinder test for RodentStudio's RodentLimb workflows. It learned from a few hundred human-labelled frames and twenty thousand carefully cleaned DeepLabCut predictions.</p>
+</div></section>
+<div class="shell"><article class="article">
+<div class="guide-meta"><span class="badge">YOLO26s-pose</span><span class="badge">7 keypoints</span><span class="badge">640 px</span><span class="badge mac">Core ML · FP32</span></div>
+<nav class="toc" aria-label="On this page"><strong>On this page</strong><ol>
+<li><a href="#card">Model card</a></li>
+<li><a href="#why">Why distil DeepLabCut?</a></li>
+<li><a href="#data">The lab's DeepLabCut project</a></li>
+<li><a href="#split">Step 1 · Splits without leakage</a></li>
+<li><a href="#clean">Step 2 · Cleaning DLC trajectories</a></li>
+<li><a href="#select">Step 3 · Choosing 20,000 frames</a></li>
+<li><a href="#agree">Step 4 · A second opinion: the agreement filter</a></li>
+<li><a href="#train">Step 5 · Three training stages</a></li>
+<li><a href="#eval">Step 6 · Evaluation on human labels</a></li>
+<li><a href="#export">Step 7 · Export</a></li>
+<li><a href="#v1">Version 1 and what changed</a></li>
+<li><a href="#limits">Limitations</a></li>
+<li><a href="#cite">What to cite</a></li>
+</ol></nav>
+
+<h2 id="card">Model card</h2>
+<div class="table-wrap"><table class="kv">
+<tr><th>Shipped file</th><td><code>CylinderMousePoseV2.mlpackage</code> (37.67 MiB); metadata version 2.0</td></tr>
+<tr><th>Keypoints (output order)</th><td><code>L_fore_paw</code>, <code>L_hind_paw</code>, <code>R_fore_paw</code>, <code>R_hind_paw</code>, <code>tail_base</code>, <code>nose</code>, <code>mouth</code> — the order of the lab's DeepLabCut <code>config.yaml</code>; <code>flip_idx</code> = <code>[2, 3, 0, 1, 4, 5, 6]</code></td></tr>
+<tr><th>Starting weights</th><td>Ultralytics <code>yolo26s-pose.pt</code> (COCO-pretrained); 9,783,360 parameters</td></tr>
+<tr><th>Input / output</th><td>640 × 640 RGB → raw head tensor (1, 26, 8400); no NMS in the model</td></tr>
+<tr><th>Training data</th><td>The lab's cylinder recordings: 543 human-labelled frames (used twice) + 20,000 cleaned DeepLabCut pseudo-labels from 506 recordings</td></tr>
+<tr><th>Teacher</th><td>DeepLabCut ResNet-50 model <code>DLC_resnet50_cylinder_DLCJan2shuffle1_44000</code></td></tr>
+<tr><th>Software</th><td>Ultralytics 8.4.177, PyTorch 2.11.0, coremltools 9.0; run <code>20261014_1156_dlc_distill</code></td></tr>
+<tr><th>Precision</th><td>FP32 (exported without quantization)</td></tr>
+<tr><th>Recorded test error</th><td><code>test_err_body_length</code>: “0.035 (v1-style manual-only baseline 0.050)”</td></tr>
+</table></div>
+<p class="src">Sources: package metadata; notebooks <code>Cylinder_YOLO26_v2_DLC_Distill</code> and <code>Cylinder_YOLO26_Pose_Training</code> (v1); app source <code>Analysis/PoseTypes.swift</code>.</p>
+
+<h2 id="why">Why distil DeepLabCut?</h2>
+<p>The lab already had a DeepLabCut model that analysed hundreds of cylinder videos. DeepLabCut gives accurate, project-specific keypoints, but its ResNet-50 network and Python stack do not fit an offline Mac app. A YOLO26 pose model exports cleanly to Core ML. Distillation turns the many videos DeepLabCut has already tracked into training data for the smaller model, with two risks to manage: the student can copy the teacher's mistakes, and a large pool of easy, repetitive frames can drown out the hard poses. Every step below addresses one of these.</p>
+
+<h2 id="data">The lab's DeepLabCut project</h2>
+<ul>
+<li><strong>Human labels:</strong> 743 labelled frames in 38 <code>labeled-data</code> folders of the DeepLabCut project.</li>
+<li><strong>Teacher predictions:</strong> one DeepLabCut <code>.h5</code> track per analysed video. After merging each recording with its <code>downsized_</code> copy there were 524 distinct recordings; 519 had tracks from the scorer named above. Videos were recorded at 60 fps.</li>
+<li><strong>Where the data live:</strong> in the lab's own project on Google Drive. These pages do not establish whether the recordings are publicly available; if they are published (for example as a dataset with a DOI), cite that dataset.</li>
+</ul>
+
+<h2 id="split">Step 1 · Splits without leakage</h2>
+<p>Splits were made only over human-labelled recording groups, so that every test frame is a human label from a recording the student never saw. Original and <code>downsized_</code> versions of a recording count as one group.</p>
+<div class="table-wrap"><table>
+<thead><tr><th>Split</th><th class="num">Human-labelled frames</th><th class="num">Recording groups</th><th>Used for</th></tr></thead>
+<tbody>
+<tr><td>Train</td><td class="num">543</td><td class="num">28</td><td>M0, stage A (×2), stage B</td></tr>
+<tr><td>Validation</td><td class="num">120</td><td class="num">6</td><td>Choosing between <code>best.pt</code> and <code>last.pt</code>, choosing the final model</td></tr>
+<tr><td>Test</td><td class="num">80</td><td class="num">4</td><td>Reported results only</td></tr>
+</tbody></table></div>
+<p>DeepLabCut pseudo-labels were drawn only from recordings outside the validation and test groups. Version 1 had grouped <code>downsized_</code> copies separately; the v2 notebook found that 39 v1 training frames came from v1 validation or test recordings, and v2's grouping removes that leak.</p>
+
+<h2 id="clean">Step 2 · Cleaning DLC trajectories</h2>
+<p>Version 1 accepted a DeepLabCut frame when at least 5 of 7 points had likelihood ≥ 0.95; that let through 95.7 % of all frames. Version 2 judges each frame in the context of the whole trajectory and drops it if any rule fails:</p>
+<div class="table-wrap"><table>
+<thead><tr><th>Rule</th><th>Setting</th></tr></thead>
+<tbody>
+<tr><td>Visibility</td><td>Likelihood ≥ 0.95 → visible; &lt; 0.50 → occluded; any point in between → drop the frame, so the model never learns a wrong “not visible” signal</td></tr>
+<tr><td>Enough points</td><td>At least 4 visible points</td></tr>
+<tr><td>Temporal jumps</td><td>A visible point more than 0.15 median body lengths from its 7-frame rolling median</td></tr>
+<tr><td>Left/right swap</td><td>Left and right paws both on the opposite side of the tail_base→nose axis from where they usually are in that video (margin 0.05 body length; not tested when body length &lt; 0.5 × median, as in rearing)</td></tr>
+<tr><td>Geometry</td><td>Nose–mouth distance ≤ 0.35 body length; body length 0.30–1.60 × the video median; confident points inside the frame</td></tr>
+</tbody></table></div>
+<p>Of 34,292,020 DeepLabCut frames, the v1 rule would accept 32,827,454 (95.7 %); the v2 rules kept 24,362,080 (71.0 %).</p>
+
+<h2 id="select">Step 3 · Choosing 20,000 frames</h2>
+<ol>
+<li>Candidates: cleaned frames at least 10 frames apart, at most 1,500 per video → 752,692 candidates.</li>
+<li>Pose description: points relative to the tail base, rotated to the body axis and divided by the video's median body length, so rearing (short) and four-paw postures stay distinct.</li>
+<li>Clustering: k-means with 60 pose clusters, plus one group for frames missing the nose or tail base.</li>
+<li>Balanced draw: the same quota from every cluster, round-robin across videos, at most 120 frames per video, oversampled by 30 % → a pool of 26,000 frames from 506 recordings.</li>
+</ol>
+<p>The notebook also checked that seeking to a frame number in the video returns the same image as reading sequentially, because DeepLabCut frame numbers count sequentially decoded frames. The check passed and seeking was used.</p>
+
+<h2 id="agree">Step 4 · A second opinion: the agreement filter</h2>
+<p>A YOLO model trained only on the human labels (M0, below) is independent of DeepLabCut. It predicted every frame in the pool. Wherever M0 was confident about a point (confidence ≥ 0.5) and that point was more than 0.25 body lengths from DeepLabCut's, the frame was rejected and listed for human review. Frames M0 could not handle were <em>kept</em>, so the filter does not bias the set towards easy poses. 903 frames were rejected and 20,000 pseudo-labels remained.</p>
+<p>Labels were written in YOLO pose format with the same box rule as v1: the envelope of the visible keypoints, padded by the larger of 5.5 % of the image size and 30 % of the keypoint extent on each axis.</p>
+
+<h2 id="train">Step 5 · Three training stages</h2>
+<div class="table-wrap"><table>
+<thead><tr><th>Stage</th><th>Starts from</th><th>Training data</th><th class="num">Epochs (patience)</th><th>Learning rate</th></tr></thead>
+<tbody>
+<tr><td>M0 · manual only</td><td><code>yolo26s-pose.pt</code></td><td>543 human frames</td><td class="num">150 (40)</td><td>1e-3</td></tr>
+<tr class="highlight"><td>A · pseudo + manual</td><td><code>yolo26s-pose.pt</code></td><td>20,000 pseudo-labels + 543 human frames × 2 (21,086 entries)</td><td class="num">60 (20)</td><td>1e-3</td></tr>
+<tr><td>B · manual fine-tune</td><td>stage A</td><td>543 human frames</td><td class="num">60 (25)</td><td>2e-4, no warm-up</td></tr>
+</tbody></table></div>
+<pre><code>COMMON_TRAIN = dict(imgsz=640, batch=16, seed=42, deterministic=True, optimizer='AdamW', cos_lr=True,
+                    mosaic=0.5, mixup=0.0, fliplr=0.5, flipud=0.0, degrees=10.0, translate=0.06, scale=0.25)
+model = YOLO('yolo26s-pose.pt')
+model.train(data='data_stageA_pseudo_plus_manual.yaml', epochs=60, patience=20, lr0=1e-3, **COMMON_TRAIN)</code></pre>
+<p>With seven points and Ultralytics' default OKS sigmas, pose mAP50-95 was already about 0.92–0.96 and could not separate models, so after each stage the notebook chose between <code>best.pt</code> and <code>last.pt</code> by mean keypoint error on the validation frames, and chose the final model the same way. Stage A had the lowest validation error (0.0339 body lengths, against 0.0343 for B and 0.0503 for M0) and became CylinderMousePoseV2.</p>
+
+<h2 id="eval">Step 6 · Evaluation on human labels</h2>
+<p>All errors are measured against human labels and divided by the body length (the human nose–tail_base distance). <em>Frame error</em> is the mean over a frame's points; a missed mouse would count as one body length. PCK@<em>t</em> is the share of points within <em>t</em> body lengths. The L-R swap rate is the share of frames in which the predicted left and right paws match the human labels better when exchanged. 95 % confidence intervals come from 2,000 bootstrap resamples.</p>
+<div class="table-wrap"><table>
+<thead><tr><th>Model (test split)</th><th class="num">Frames</th><th class="num">Frame error [95 % CI]</th><th class="num">Median error</th><th class="num">90th pct.</th><th class="num">PCK@0.05</th><th class="num">PCK@0.1</th><th class="num">Fore / hind L-R swap</th></tr></thead>
+<tbody>
+<tr><td>M0 · manual only</td><td class="num">80</td><td class="num">0.0502 [0.040, 0.062]</td><td class="num">4.29 px</td><td class="num">12.93 px</td><td class="num">0.762</td><td class="num">0.919</td><td class="num">6.3 % / 6.4 %</td></tr>
+<tr class="highlight"><td>A · shipped</td><td class="num">80</td><td class="num">0.0346 [0.025, 0.046]</td><td class="num">2.76 px</td><td class="num">6.60 px</td><td class="num">0.919</td><td class="num">0.956</td><td class="num">6.3 % / 6.4 %</td></tr>
+<tr><td>B · manual fine-tune</td><td class="num">80</td><td class="num">0.0349 [0.026, 0.047]</td><td class="num">3.11 px</td><td class="num">6.40 px</td><td class="num">0.923</td><td class="num">0.958</td><td class="num">6.3 % / 6.4 %</td></tr>
+<tr><td>DLC teacher (reference only)</td><td class="num">60</td><td class="num">0.0211 [0.018, 0.024]</td><td class="num">2.70 px</td><td class="num">5.03 px</td><td class="num">0.965</td><td class="num">0.995</td><td class="num">1.7 % / 0.0 %</td></tr>
+</tbody></table></div>
+<p class="caption">All models detected the mouse in every test frame. DeepLabCut could be compared on 60 of the 80 test frames (those whose video version and frame index could be matched).</p>
+<p><strong>Paired comparisons on the same 80 test frames</strong> (difference in frame error, body lengths, bootstrap 95 % CI):</p>
+<ul>
+<li>A − M0 = −0.0156 [−0.019, −0.012]: the DeepLabCut pseudo-labels clearly helped.</li>
+<li>B − A = +0.0003 [−0.001, 0.001]: fine-tuning on human labels made no measurable difference.</li>
+<li>B − DLC teacher = +0.0112 [0.004, 0.021] on 60 frames: the teacher is still more accurate on these frames, but DeepLabCut was probably trained on these very human-labelled frames, so its numbers are optimistic.</li>
+</ul>
+<p>The paw left/right swap rate did not change between M0, A and B (6.3 % fore, 6.4 % hind). Distillation did not fix it, and for limb-use asymmetry measures it matters more than average error.</p>
+
+<h2 id="export">Step 7 · Export</h2>
+<pre><code>import json
+from ultralytics import YOLO
+import coremltools as ct
+
+# the .pt is first copied to CylinderMousePoseV2.pt so the package gets that name
+exported = YOLO('CylinderMousePoseV2.pt').export(format='coreml', imgsz=640)   # FP32, raw head, no NMS
+
+m = ct.models.MLModel(exported, skip_model_load=True)     # edit metadata only
+m.short_description = ('Cylinder mouse pose v2: YOLO26s-pose, DLC-distilled '
+                       '(20k cleaned pseudo-labels + 543 manual), 7 keypoints')
+m.version = '2.0'
+m.author = 'Cylinder YOLO26 v2 pipeline'
+m.user_defined_metadata.update({
+    'keypoints': json.dumps(['L_fore_paw', 'L_hind_paw', 'R_fore_paw', 'R_hind_paw', 'tail_base', 'nose', 'mouth']),
+    'input_size': '640',
+    'output_shape': '(1, 26, 8400)  # 4 box + 1 conf + 7x3 keypoints',
+    'source_run': '20261014_1156_dlc_distill',
+    'test_err_body_length': '0.035 (v1-style manual-only baseline 0.050)',
+})
+m.save('CylinderMousePoseV2_final.mlpackage')    # then renamed back to CylinderMousePoseV2.mlpackage</code></pre>
+<p class="src">Condensed from the last export cell of <code>Cylinder_YOLO26_v2_DLC_Distill</code> (run with Ultralytics 8.4.177 and coremltools ≥ 9.0). The shipped package was not quantized, which is why it is about 14 times larger than MousePose6. Writing the training run and test error into the package is a good habit: anyone can later check which model an app contains.</p>
+<p>The notebook also exported 200 frames for human review (active learning): the frames where M0 and DeepLabCut disagreed most, plus examples of each rejection reason. Corrected, they can become new <em>training</em> labels, not test labels, because other frames of the same recordings are already in training.</p>
+
+<h2 id="v1">Version 1 and what changed</h2>
+<p>Version 1 (<code>Cylinder_YOLO26_Pose_Training</code>) used the same architecture and training settings for 150 epochs, with 2,715 training images: the 543 human frames plus 2,172 DeepLabCut frames sampled at about one per second (likelihood ≥ 0.95 for at least 5 points). Validation (120) and test (80) frames were human labels. Version 2 changed four things: leak-free grouping, trajectory-based cleaning, pose-balanced sampling, and an independent agreement filter, and it replaced Ultralytics mAP with body-length-normalised errors and paired confidence intervals. The v1 model was also run on one video from a public PhysioNet cylinder-rearing dataset as a qualitative demonstration; that dataset was not used for training.</p>
+
+<h2 id="limits">Limitations</h2>
+<ul>
+<li>One lab, one rig, one camera setup. Other cylinders, lighting, frame rates or strains are untested.</li>
+<li>The test set is 80 frames from 4 recording groups; the confidence intervals are correspondingly wide.</li>
+<li>About 6 % of test frames have left/right paws swapped. Review paw identity before reporting asymmetry.</li>
+<li>Pseudo-labels inherit DeepLabCut's systematic biases; the agreement filter only removes clear disagreements.</li>
+<li>RodentStudio also offers this model for its limb-based tail-suspension and gait workflows. Those videos are outside its training data; validate before use.</li>
+<li>No comparison of derived cylinder-test scores (such as paw contacts) with human scoring is reported here.</li>
+</ul>
+
+<h2 id="cite">What to cite</h2>
+<p>Cite RodentStudio (with version), Ultralytics YOLO26, DeepLabCut (Mathis et al. 2018; Nath et al. 2019) for the teacher model, and the lab's recordings if they are published. See the <a href="citations.html#use-cylinder">citation page</a>.</p>
+<nav class="pager" aria-label="Pages"><a class="prev" href="mousepose6.html"><small>← Previous</small>Tutorial 1: MousePose6 from four public datasets</a><a class="next" href="tst-detector.html"><small>Next →</small>Tutorial 3: The tail-suspension mouse detector</a></nav>
+</article></div>
+</main><footer class="footer"><div class="shell footer-grid"><div><strong>RodentStudio Tutorials</strong><div><small>© 2026 Ziqing Shi · Developer: Ziqing Shi</small></div><div><small>Independent research software. Model outputs require scientific validation.</small></div></div><div class="footer-links"><a href="https://seesaw-earth.github.io/RodentStudio-Support/">Support site</a><a href="references.bib">references.bib</a><a href="https://github.com/seesaw-earth/RodentStudio-Tutorials">Source on GitHub</a><a href="https://seesaw-earth.github.io/RodentStudio-Support/legal.html">Legal &amp; notices</a></div></div></footer></body></html>

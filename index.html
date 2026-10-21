@@ -1,0 +1,98 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="color-scheme" content="light"><meta name="description" content="Bilingual tutorials on where the data behind RodentStudio&#x27;s pose models came from, how the models were trained and tested, how they run on-device, and how to cite every source."><meta name="theme-color" content="#e9f9f7"><title>How the RodentStudio models were built · RodentStudio Tutorials</title><link rel="canonical" href="https://seesaw-earth.github.io/RodentStudio-Tutorials/"><link rel="alternate" hreflang="en" href="https://seesaw-earth.github.io/RodentStudio-Tutorials/"><link rel="alternate" hreflang="zh-CN" href="https://seesaw-earth.github.io/RodentStudio-Tutorials/zh/"><link rel="icon" href="assets/favicon.png" type="image/png"><link rel="stylesheet" href="assets/styles.css"><link rel="stylesheet" href="assets/tutorial.css"><meta property="og:type" content="article"><meta property="og:title" content="How the RodentStudio models were built · RodentStudio Tutorials"><meta property="og:description" content="Bilingual tutorials on where the data behind RodentStudio&#x27;s pose models came from, how the models were trained and tested, how they run on-device, and how to cite every source."><meta property="og:url" content="https://seesaw-earth.github.io/RodentStudio-Tutorials/"><meta property="og:image" content="https://seesaw-earth.github.io/RodentStudio-Tutorials/assets/app-icon.png"></head><body><a class="skip-link" href="#main">Skip to content</a><header class="nav-wrap"><nav class="nav shell" aria-label="Main navigation"><a class="brand" href="index.html"><img src="assets/app-icon.png" alt="" width="40" height="40"> RodentStudio Tutorials</a><div class="links"><a href="index.html" aria-current="page">Overview</a><a href="mousepose6.html">MousePose6</a><a href="cylinder-v2.html">Cylinder v2</a><a href="tst-detector.html">TST detector</a><a href="app-integration.html">Into the app</a><a href="citations.html">How to cite</a><a href="https://seesaw-earth.github.io/RodentStudio-Support/">Support site ↗</a><a class="language" href="zh/index.html" lang="zh-CN">中文</a></div></nav></header><main id="main"><section class="hero compact"><div class="shell hero-grid"><div>
+<div class="chips"><span class="chip">RODENTSTUDIO · MODEL TUTORIALS</span><span class="chip">ENGLISH · 中文</span></div>
+<h1>From open data to an offline Mac app</h1>
+<p class="lead">How the pose models inside RodentStudio were made: where the videos and labels came from, how they were cleaned, split, trained and tested, how they became Core ML packages, and how to cite every source correctly.</p>
+<div class="actions"><a class="btn primary" href="mousepose6.html">Start with MousePose6 <span aria-hidden="true">→</span></a><a class="btn secondary" href="citations.html">How to cite</a></div>
+<div class="micro">Three bundled models · Ultralytics YOLO → Core ML · Written from the original notebooks, the model metadata and the app source</div>
+</div><div class="hero-art"><img alt="RodentStudio app icon" src="assets/app-icon.png" width="480" height="480"></div></div></section>
+
+<section class="section"><div class="shell">
+<div class="eyebrow">THE PIPELINE</div>
+<h2>Three models, three different origins</h2>
+<p class="section-intro">RodentStudio runs every analysis on the Mac. Three neural-network packages ship inside the app. Each lane below is one model, from its training data to the workflows that use it. Click a model name for its tutorial.</p>
+<div class="pipeline">
+<div class="lane" style="--n:5"><div class="lane-head"><strong>MousePose6_960_int8</strong><span>top-view body pose · 6 keypoints</span><a href="mousepose6.html">Tutorial 1 →</a></div>
+<ol>
+<li><b>Public videos + pose files</b>ETH Zurich (Zenodo, CC BY 4.0) and JAX JABS (Harvard Dataverse); 52 videos</li>
+<li><b>Harmonize &amp; filter</b>Map 12- and 13-point schemes to 6 shared points, fix left/right, drop doubtful frames</li>
+<li><b>Train</b>YOLO26n-pose, 960 px, 120 epochs, 6,140 training images</li>
+<li><b>Export</b>Core ML, 8-bit weights, end-to-end head, 2.76 MiB</li>
+<li class="app"><b>In the app</b>RodentPose workflows: open field, EPM, light–dark box, mazes, social tests…</li>
+</ol></div>
+<div class="lane" style="--n:5"><div class="lane-head"><strong>CylinderMousePoseV2</strong><span>paws, nose, mouth, tail base · 7 keypoints</span><a href="cylinder-v2.html">Tutorial 2 →</a></div>
+<ol>
+<li><b>Lab DeepLabCut project</b>743 human-labelled frames and DLC tracks for 500+ cylinder recordings</li>
+<li><b>Clean &amp; select</b>Trajectory-based cleaning, pose clustering, agreement filter → 20,000 pseudo-labels</li>
+<li><b>Train</b>YOLO26s-pose, 640 px; pseudo-labels + human labels</li>
+<li><b>Export</b>Core ML, full precision (FP32), raw head, 37.67 MiB</li>
+<li class="app"><b>In the app</b>RodentLimb workflows: cylinder test (also offered for limb tail-suspension and gait)</li>
+</ol></div>
+<div class="lane" style="--n:4"><div class="lane-head"><strong>MouseDetector</strong><span>mouse boxes · 1 class</span><a href="tst-detector.html">Tutorial 3 →</a></div>
+<ol>
+<li class="gap"><b>Training images</b>Synthetic images from one rig, according to the app; dataset and notebook not available for review</li>
+<li><b>Train</b>YOLO11n detect, 320 px</li>
+<li><b>Export</b>Core ML, FP16, with built-in NMS, 5.14 MiB</li>
+<li class="app"><b>In the app</b>Multi-chamber tail suspension; classical detector as fallback</li>
+</ol></div>
+</div>
+<p class="micro">Amber marks a step whose details we could not document. The fourth tutorial, <a href="app-integration.html">From a trained model to Core ML in the app</a>, covers the export and decoding steps that all three models share.</p>
+</div></section>
+
+<section class="section section-soft"><div class="shell">
+<div class="eyebrow">AT A GLANCE</div>
+<h2>The bundled models</h2>
+<div class="model-grid">
+<div class="model-card"><span class="badge info">RodentPose</span><h3>MousePose6_960_int8</h3>
+<p>Finds one mouse per frame and six body points in top-view arenas.</p>
+<dl><dt>Model</dt><dd>YOLO26n-pose · 2.5 M parameters</dd><dt>Input</dt><dd>960 × 960, letterboxed</dd><dt>Points</dt><dd>nose, left_ear, right_ear, neck, body_center, tail_base</dd><dt>Data</dt><dd>8,840 frames from 4 public datasets</dd><dt>Labels</dt><dd>DeepLabCut and JAX-network predictions, filtered — not human annotation</dd><dt>Test</dt><dd>1,350 frames: 94.6 % of mice detected; 96.1 % of their points within 0.1 body length of the reference labels</dd></dl>
+<a class="more" href="mousepose6.html">Read tutorial 1 →</a></div>
+<div class="model-card"><span class="badge mac">RodentLimb</span><h3>CylinderMousePoseV2</h3>
+<p>Tracks paws, nose, mouth and tail base of a mouse rearing in a cylinder.</p>
+<dl><dt>Model</dt><dd>YOLO26s-pose · 9.8 M parameters</dd><dt>Input</dt><dd>640 × 640, letterboxed</dd><dt>Points</dt><dd>L/R fore paw, L/R hind paw, tail_base, nose, mouth</dd><dt>Data</dt><dd>Lab recordings: 543 human-labelled + 20,000 cleaned DLC frames</dd><dt>Labels</dt><dd>Human labels + DeepLabCut teacher</dd><dt>Test</dt><dd>80 human-labelled frames from held-out recordings; mean error 0.035 body length</dd></dl>
+<a class="more" href="cylinder-v2.html">Read tutorial 2 →</a></div>
+<div class="model-card"><span class="badge warn">Provenance incomplete</span><h3>MouseDetector</h3>
+<p>Draws a box around each mouse in multi-chamber tail-suspension videos.</p>
+<dl><dt>Model</dt><dd>YOLO11n detect</dd><dt>Input</dt><dd>320 × 320, letterboxed by the app</dd><dt>Classes</dt><dd>mouse</dd><dt>Data</dt><dd>Synthetic images from one rig (in-app note)</dd><dt>Labels</dt><dd>Not documented</dd><dt>Test</dt><dd>Not documented</dd></dl>
+<a class="more" href="tst-detector.html">Read tutorial 3 →</a></div>
+</div>
+</div></section>
+
+<section class="section"><div class="shell"><div class="article wide" style="padding:0">
+<div class="eyebrow">READ THIS FIRST</div>
+<h2 style="font-size:clamp(27px,3.2vw,41px);margin-top:8px">What the numbers do and do not show</h2>
+<ul>
+<li><strong>MousePose6 was trained and tested against model-generated labels.</strong> The reference points are the DeepLabCut and JAX pose-network predictions released with each dataset, after filtering. Its test scores measure agreement with those predictions, not with human annotators.</li>
+<li><strong>CylinderMousePoseV2 was tested on 80 human-labelled frames</strong> from four held-out recording groups of one lab's setup. That is a small test set; the confidence intervals are reported in tutorial 2.</li>
+<li><strong>Checks outside the training data were mixed.</strong> On CalMS21 home-cage videos with two interacting mice, MousePose6 found the resident mouse in 11.8 % of frames and the white intruder in 0.3 %. In a five-video elevated-plus-maze pilot, time-in-zone measures agreed well with a DeepLabCut-based reference, while arm entries, distance travelled and stretched-attend postures did not.</li>
+<li><strong>The detector's training data and accuracy are not documented</strong> in the materials reviewed for these pages.</li>
+<li><strong>None of this is a validation of RodentStudio's behavioural measures.</strong> Scientific use still needs human-scored comparison on your own videos.</li>
+</ul>
+<div class="notice warn"><strong>Two of MousePose6's training datasets are non-commercial.</strong> The two ETH Zurich datasets are CC BY 4.0, but the two JAX datasets on Harvard Dataverse are CC BY-NC-SA 4.0 (non-commercial, share-alike), which limits commercial use of MousePose6; see <a href="mousepose6.html#sources">tutorial 1</a>. Ultralytics YOLO is AGPL-3.0 unless an Enterprise licence is used. See <a href="citations.html#licences">the licence table</a>.</div>
+</div></div></section>
+
+<section class="section section-soft"><div class="shell">
+<div class="eyebrow">TUTORIALS</div>
+<h2>Read in order, or jump to what you need</h2>
+<div class="linklist">
+<a href="mousepose6.html">1 · MousePose6 from four public datasets<small>Keypoint harmonization, left/right fixing, frame sampling, video-level splits, training, evaluation, external checks</small></a>
+<a href="cylinder-v2.html">2 · Distilling DeepLabCut into CylinderMousePoseV2<small>Trajectory cleaning, pose clustering, agreement filter, two-stage training, paired comparisons</small></a>
+<a href="tst-detector.html">3 · The tail-suspension mouse detector<small>What the package metadata says, what is missing, and which trackers use no neural network</small></a>
+<a href="app-integration.html">4 · From a trained model to Core ML in the app<small>Export settings, metadata checks, Vision letterboxing, decoding the output tensor in Swift</small></a>
+<a href="citations.html">5 · How to cite<small>What to cite for each model, full references, BibTeX, licence table, example methods text</small></a>
+<a href="references.bib">references.bib<small>All references in one BibTeX file</small></a>
+</div>
+</div></section>
+
+<section class="section"><div class="shell"><div class="article wide" style="padding:0">
+<h2 style="margin-top:0">Sources for these pages</h2>
+<p>Every number on these pages comes from one of three places, and each page says which:</p>
+<ol>
+<li>The original Google Colab notebooks used to build the datasets, train, evaluate and export the models (for example <code>1012_MousePose_Dataset_Builder_v1</code>, <code>MousePose_YOLO_Train_v1</code>, <code>MousePose_iOS_Export_v1</code>, <code>Cylinder_YOLO26_Pose_Training</code>, <code>Cylinder_YOLO26_v2_DLC_Distill</code>, <code>YOLO_on_CalMS21_v1</code>, <code>RodentPose_Colab</code>).</li>
+<li>The metadata stored inside each shipped <code>.mlpackage</code> (training command, library versions, dates, input and output shapes).</li>
+<li>The app source published in the <a href="https://github.com/seesaw-earth/RodentStudio-Support/tree/main/source">RodentStudio-Support repository</a> (model loading, decoding and the assays that use each model).</li>
+</ol>
+<p>The same archive also holds notebooks for models that RodentStudio does not ship (balance beam, RotaWheel, grooming clips, CalMS21 prompt experiments, RodentFlow re-analyses). They are not covered here.</p>
+<p>Dataset records, licences and bibliographic details were checked against Zenodo, DataCite, Crossref and the publishers' pages on 20 October 2026. Items we could not confirm are labelled <span class="badge todo">To verify</span>.</p>
+<p>To cite these tutorials, use the <a href="https://github.com/seesaw-earth/RodentStudio-Tutorials/blob/main/CITATION.cff">CITATION.cff</a> file in the repository.</p>
+</div></div></section>
+</main><footer class="footer"><div class="shell footer-grid"><div><strong>RodentStudio Tutorials</strong><div><small>© 2026 Ziqing Shi · Developer: Ziqing Shi</small></div><div><small>Independent research software. Model outputs require scientific validation.</small></div></div><div class="footer-links"><a href="https://seesaw-earth.github.io/RodentStudio-Support/">Support site</a><a href="references.bib">references.bib</a><a href="https://github.com/seesaw-earth/RodentStudio-Tutorials">Source on GitHub</a><a href="https://seesaw-earth.github.io/RodentStudio-Support/legal.html">Legal &amp; notices</a></div></div></footer></body></html>
