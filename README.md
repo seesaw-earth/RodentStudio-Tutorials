@@ -2,7 +2,7 @@
 
 Bilingual (English / 中文) tutorials on the models bundled with RodentStudio: where their data and labels came from, how they were trained and tested, how they became Core ML packages, how the app runs them, and how to cite every dataset, paper and software package correctly.
 
-Site: https://seesaw-earth.github.io/RodentStudio-Tutorials/ (once GitHub Pages is enabled)
+> **Moved.** The tutorials are now part of the RodentFlow manual: https://seesaw-earth.github.io/RodentFlow/tutorials/ (中文: https://seesaw-earth.github.io/RodentFlow/zh/tutorials/). Their Markdown source is in the [RodentFlow repository](https://github.com/seesaw-earth/RodentFlow/tree/main/docs/tutorials); edit them there. The HTML pages in this repository only redirect to the new pages, so do not run `tools/build.py` again: it would overwrite the redirects. `src/`, `references.bib` and `CITATION.cff` are kept as the original record.
 
 | Page | English | 中文 |
 |---|---|---|

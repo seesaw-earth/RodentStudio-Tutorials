@@ -12,7 +12,7 @@ authors:
   - family-names: Shi
     given-names: Ziqing
 version: 0.1.0
-url: "https://seesaw-earth.github.io/RodentStudio-Tutorials/"
+url: "https://seesaw-earth.github.io/RodentFlow/tutorials/"
 repository-code: "https://github.com/seesaw-earth/RodentStudio-Tutorials"
 keywords:
   - pose estimation

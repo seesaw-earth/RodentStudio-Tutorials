@@ -1,98 +1,24 @@
-<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="color-scheme" content="light"><meta name="description" content="中英双语教程：RodentStudio 姿态模型的数据从哪里来、模型如何训练和测试、如何在设备上运行，以及如何正确引用每一个来源。"><meta name="theme-color" content="#e9f9f7"><title>RodentStudio 的模型是怎么来的 · RodentStudio 教程</title><link rel="canonical" href="https://seesaw-earth.github.io/RodentStudio-Tutorials/zh/"><link rel="alternate" hreflang="en" href="https://seesaw-earth.github.io/RodentStudio-Tutorials/"><link rel="alternate" hreflang="zh-CN" href="https://seesaw-earth.github.io/RodentStudio-Tutorials/zh/"><link rel="icon" href="../assets/favicon.png" type="image/png"><link rel="stylesheet" href="../assets/styles.css"><link rel="stylesheet" href="../assets/tutorial.css"><meta property="og:type" content="article"><meta property="og:title" content="RodentStudio 的模型是怎么来的 · RodentStudio 教程"><meta property="og:description" content="中英双语教程：RodentStudio 姿态模型的数据从哪里来、模型如何训练和测试、如何在设备上运行，以及如何正确引用每一个来源。"><meta property="og:url" content="https://seesaw-earth.github.io/RodentStudio-Tutorials/zh/"><meta property="og:image" content="https://seesaw-earth.github.io/RodentStudio-Tutorials/assets/app-icon.png"></head><body><a class="skip-link" href="#main">跳到正文</a><header class="nav-wrap"><nav class="nav shell" aria-label="主导航"><a class="brand" href="index.html"><img src="../assets/app-icon.png" alt="" width="40" height="40"> RodentStudio 教程</a><div class="links"><a href="index.html" aria-current="page">概览</a><a href="mousepose6.html">MousePose6</a><a href="cylinder-v2.html">Cylinder v2</a><a href="tst-detector.html">TST 检测器</a><a href="app-integration.html">接入 App</a><a href="citations.html">如何引用</a><a href="https://seesaw-earth.github.io/RodentStudio-Support/zh/">支持网站 ↗</a><a class="language" href="../index.html" lang="en">English</a></div></nav></header><main id="main"><section class="hero compact"><div class="shell hero-grid"><div>
-<div class="chips"><span class="chip">RODENTSTUDIO · 模型教程</span><span class="chip">中文 · ENGLISH</span></div>
-<h1>从公开数据到离线运行的 Mac App</h1>
-<p class="lead">RodentStudio 里的姿态模型是怎么做出来的：视频和标签从哪里来，如何清洗、划分、训练和测试，如何变成 Core ML 模型包，以及怎样正确引用每一个来源。</p>
-<div class="actions"><a class="btn primary" href="mousepose6.html">从 MousePose6 开始 <span aria-hidden="true">→</span></a><a class="btn secondary" href="citations.html">如何引用</a></div>
-<div class="micro">三个内置模型 · Ultralytics YOLO → Core ML · 依据原始 notebook、模型元数据和 App 源码编写</div>
-</div><div class="hero-art"><img alt="RodentStudio 应用图标" src="../assets/app-icon.png" width="480" height="480"></div></div></section>
-
-<section class="section"><div class="shell">
-<div class="eyebrow">流程</div>
-<h2>三个模型，三种来历</h2>
-<p class="section-intro">RodentStudio 的所有分析都在 Mac 本机完成，App 内置三个神经网络模型包。下面每一行是一个模型：从训练数据一直到使用它的实验流程。点击模型名进入对应教程。</p>
-<div class="pipeline">
-<div class="lane" style="--n:5"><div class="lane-head"><strong>MousePose6_960_int8</strong><span>俯视身体姿态 · 6 个关键点</span><a href="mousepose6.html">教程 1 →</a></div>
-<ol>
-<li><b>公开视频 + 姿态文件</b>ETH Zurich（Zenodo，CC BY 4.0）与 JAX JABS（Harvard Dataverse）；共 52 段视频</li>
-<li><b>统一与过滤</b>把 12 点、13 点方案映射到 6 个共有点，统一左右，剔除可疑帧</li>
-<li><b>训练</b>YOLO26n-pose，960 px，120 轮，6,140 张训练图</li>
-<li><b>导出</b>Core ML，8 位权重，端到端输出头，2.76 MiB</li>
-<li class="app"><b>在 App 中</b>RodentPose 流程：旷场、高架十字迷宫、明暗箱、各类迷宫、社交实验……</li>
-</ol></div>
-<div class="lane" style="--n:5"><div class="lane-head"><strong>CylinderMousePoseV2</strong><span>四爪、鼻、嘴、尾根 · 7 个关键点</span><a href="cylinder-v2.html">教程 2 →</a></div>
-<ol>
-<li><b>实验室的 DeepLabCut 项目</b>743 帧人工标注，以及 500 多段圆筒实验录像的 DLC 轨迹</li>
-<li><b>清洗与挑选</b>基于整条轨迹清洗、按姿态聚类、一致性过滤 → 20,000 帧伪标签</li>
-<li><b>训练</b>YOLO26s-pose，640 px；伪标签 + 人工标注</li>
-<li><b>导出</b>Core ML，全精度（FP32），原始输出头，37.67 MiB</li>
-<li class="app"><b>在 App 中</b>RodentLimb 流程：圆筒实验（也用于基于肢体的悬尾和步态流程）</li>
-</ol></div>
-<div class="lane" style="--n:4"><div class="lane-head"><strong>MouseDetector</strong><span>小鼠检测框 · 1 个类别</span><a href="tst-detector.html">教程 3 →</a></div>
-<ol>
-<li class="gap"><b>训练图像</b>据 App 说明为单一装置的合成图像；数据集与 notebook 未提供，无法核查</li>
-<li><b>训练</b>YOLO11n 检测，320 px</li>
-<li><b>导出</b>Core ML，FP16，内置 NMS，5.14 MiB</li>
-<li class="app"><b>在 App 中</b>多格悬尾实验；无模型时退回经典检测</li>
-</ol></div>
-</div>
-<p class="micro">琥珀色表示我们无法写清细节的步骤。第四篇教程<a href="app-integration.html">《从训练好的模型到 App 里的 Core ML》</a>讲三个模型共用的导出与解码步骤。</p>
-</div></section>
-
-<section class="section section-soft"><div class="shell">
-<div class="eyebrow">一览</div>
-<h2>内置模型</h2>
-<div class="model-grid">
-<div class="model-card"><span class="badge info">RodentPose</span><h3>MousePose6_960_int8</h3>
-<p>在俯视场地中每帧找到一只小鼠及其六个身体点。</p>
-<dl><dt>模型</dt><dd>YOLO26n-pose · 250 万参数</dd><dt>输入</dt><dd>960 × 960，等比缩放加边</dd><dt>关键点</dt><dd>nose、left_ear、right_ear、neck、body_center、tail_base</dd><dt>数据</dt><dd>来自 4 个公开数据集的 8,840 帧</dd><dt>标签</dt><dd>DeepLabCut 与 JAX 网络的预测，经过过滤；不是人工标注</dd><dt>测试</dt><dd>1,350 帧：检出 94.6 % 的小鼠；其中 96.1 % 的关键点与参照标签相差不到 0.1 个体长</dd></dl>
-<a class="more" href="mousepose6.html">阅读教程 1 →</a></div>
-<div class="model-card"><span class="badge mac">RodentLimb</span><h3>CylinderMousePoseV2</h3>
-<p>追踪圆筒中直立小鼠的四爪、鼻、嘴和尾根。</p>
-<dl><dt>模型</dt><dd>YOLO26s-pose · 980 万参数</dd><dt>输入</dt><dd>640 × 640，等比缩放加边</dd><dt>关键点</dt><dd>左/右前爪、左/右后爪、tail_base、nose、mouth</dd><dt>数据</dt><dd>实验室录像：543 帧人工标注 + 20,000 帧清洗后的 DLC 帧</dd><dt>标签</dt><dd>人工标注 + DeepLabCut 教师模型</dd><dt>测试</dt><dd>留出录像中的 80 帧人工标注；平均误差 0.035 个体长</dd></dl>
-<a class="more" href="cylinder-v2.html">阅读教程 2 →</a></div>
-<div class="model-card"><span class="badge warn">来源记录不完整</span><h3>MouseDetector</h3>
-<p>在多格悬尾视频中框出每只小鼠。</p>
-<dl><dt>模型</dt><dd>YOLO11n 检测</dd><dt>输入</dt><dd>320 × 320，由 App 自行加边</dd><dt>类别</dt><dd>mouse</dd><dt>数据</dt><dd>单一装置的合成图像（App 内说明）</dd><dt>标签</dt><dd>无记录</dd><dt>测试</dt><dd>无记录</dd></dl>
-<a class="more" href="tst-detector.html">阅读教程 3 →</a></div>
-</div>
-</div></section>
-
-<section class="section"><div class="shell"><div class="article wide" style="padding:0">
-<div class="eyebrow">先读这里</div>
-<h2 style="font-size:clamp(27px,3.2vw,41px);margin-top:8px">这些数字说明了什么，没说明什么</h2>
-<ul>
-<li><strong>MousePose6 的训练和测试都以模型生成的标签为参照。</strong>参照点是各数据集随附的 DeepLabCut 和 JAX 姿态网络预测（经过过滤）。测试分数衡量的是与这些预测的一致程度，而不是与人工标注者的一致程度。</li>
-<li><strong>CylinderMousePoseV2 在 80 帧人工标注上测试，</strong>来自同一实验室装置中 4 个留出的录像组。测试集很小，置信区间见教程 2。</li>
-<li><strong>训练数据以外的检验结果有好有坏。</strong>在 CalMS21 两鼠互动的家笼视频上，MousePose6 只在 11.8 % 的帧里找到黑色 resident，白色 intruder 只有 0.3 %。在 5 段高架十字迷宫视频的预试验中，区域停留时间与基于 DeepLabCut 的参照吻合良好，而进臂次数、移动距离和伸展探察姿势（SAP）则不吻合。</li>
-<li><strong>检测器的训练数据和准确度没有记录</strong>，在我们审阅的材料中找不到。</li>
-<li><strong>以上都不等于验证了 RodentStudio 的行为指标。</strong>用于科研时，仍需在自己的视频上与人工评分比较。</li>
-</ul>
-<div class="notice warn"><strong>MousePose6 有两个训练数据集限制商业使用。</strong>两个 ETH Zurich 数据集为 CC BY 4.0，但 Harvard Dataverse 上的两个 JAX 数据集为 CC BY-NC-SA 4.0（非商业、相同方式共享），这限制了 MousePose6 的商业使用；见<a href="mousepose6.html#sources">教程 1</a>。Ultralytics YOLO 为 AGPL-3.0，除非使用企业许可。见<a href="citations.html#licences">许可汇总表</a>。</div>
-</div></div></section>
-
-<section class="section section-soft"><div class="shell">
-<div class="eyebrow">教程</div>
-<h2>按顺序读，或直接跳到需要的部分</h2>
-<div class="linklist">
-<a href="mousepose6.html">1 · 用四个公开数据集训练 MousePose6<small>关键点统一、左右校正、抽帧、按视频划分、训练、评估、外部检验</small></a>
-<a href="cylinder-v2.html">2 · 把 DeepLabCut 蒸馏成 CylinderMousePoseV2<small>轨迹清洗、姿态聚类、一致性过滤、两阶段训练、配对比较</small></a>
-<a href="tst-detector.html">3 · 悬尾实验小鼠检测器<small>模型包元数据记录了什么、缺了什么，以及哪些追踪方法不用神经网络</small></a>
-<a href="app-integration.html">4 · 从训练好的模型到 App 里的 Core ML<small>导出参数、元数据检查、Vision 加边缩放、用 Swift 解码输出张量</small></a>
-<a href="citations.html">5 · 如何引用<small>每个模型该引用什么、完整参考文献、BibTeX、许可汇总、方法部分示例</small></a>
-<a href="../references.bib">references.bib<small>全部参考文献的 BibTeX 文件</small></a>
-</div>
-</div></section>
-
-<section class="section"><div class="shell"><div class="article wide" style="padding:0">
-<h2 style="margin-top:0">本教程的依据</h2>
-<p>页面上的每个数字都来自以下三处之一，每页都会注明出处：</p>
-<ol>
-<li>构建数据集、训练、评估和导出模型时使用的原始 Google Colab notebook（例如 <code>1012_MousePose_Dataset_Builder_v1</code>、<code>MousePose_YOLO_Train_v1</code>、<code>MousePose_iOS_Export_v1</code>、<code>Cylinder_YOLO26_Pose_Training</code>、<code>Cylinder_YOLO26_v2_DLC_Distill</code>、<code>YOLO_on_CalMS21_v1</code>、<code>RodentPose_Colab</code>）。</li>
-<li>每个随 App 发布的 <code>.mlpackage</code> 内部的元数据（训练命令、库版本、日期、输入输出形状）。</li>
-<li><a href="https://github.com/seesaw-earth/RodentStudio-Support/tree/main/source">RodentStudio-Support 仓库</a>中公开的 App 源码（模型加载、解码以及各模型对应的实验流程）。</li>
-</ol>
-<p>同一批文件中还有若干 RodentStudio 并未内置的模型 notebook（平衡木、RotaWheel、理毛片段、CalMS21 提示词实验、RodentFlow 复分析），本教程不涉及。</p>
-<p>数据集记录、许可和文献信息于 2026 年 10 月 20 日对照 Zenodo、DataCite、Crossref 和出版商页面核对。无法确认的条目标为 <span class="badge todo">待核对</span>。</p>
-<p>如需引用本教程，请使用仓库中的 <a href="https://github.com/seesaw-earth/RodentStudio-Tutorials/blob/main/CITATION.cff">CITATION.cff</a>。</p>
-</div></div></section>
-</main><footer class="footer"><div class="shell footer-grid"><div><strong>RodentStudio 教程</strong><div><small>© 2026 Ziqing Shi · 开发者：Ziqing Shi</small></div><div><small>独立科研软件。模型输出需要经过科学验证。</small></div></div><div class="footer-links"><a href="https://seesaw-earth.github.io/RodentStudio-Support/zh/">支持网站</a><a href="../references.bib">references.bib</a><a href="https://github.com/seesaw-earth/RodentStudio-Tutorials">GitHub 源文件</a><a href="https://seesaw-earth.github.io/RodentStudio-Support/zh/legal.html">条款与声明</a></div></div></footer></body></html>
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>RodentFlow 已迁移</title>
+<meta name="robots" content="noindex">
+<link rel="canonical" href="https://seesaw-earth.github.io/RodentFlow/zh/tutorials/">
+<script>
+(function () {
+  var map = {};
+  var hash = location.hash.slice(1);
+  var target = "https://seesaw-earth.github.io/RodentFlow/zh/tutorials/";
+  if (hash && map[hash]) target = map[hash];
+  else if (hash && true) target += "#" + hash;
+  location.replace(target);
+})();
+</script>
+<meta http-equiv="refresh" content="0; url=https://seesaw-earth.github.io/RodentFlow/zh/tutorials/">
+<style>body{font:16px/1.6 system-ui,-apple-system,"PingFang SC",sans-serif;margin:3rem auto;max-width:36rem;padding:0 1rem;color:#13203B}</style>
+</head>
+<body>
+<p>本页已迁移到 <a href="https://seesaw-earth.github.io/RodentFlow/zh/tutorials/">https://seesaw-earth.github.io/RodentFlow/zh/tutorials/</a></p>
+</body>
+</html>
