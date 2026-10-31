@@ -1,83 +1,24 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="color-scheme" content="light"><meta name="description" content="What is known about the bundled YOLO11n mouse detector for multi-chamber tail suspension, and which RodentStudio trackers use no neural network."><meta name="theme-color" content="#e9f9f7"><title>Tutorial 3: The tail-suspension mouse detector · RodentStudio Tutorials</title><link rel="canonical" href="https://seesaw-earth.github.io/RodentStudio-Tutorials/tst-detector.html"><link rel="alternate" hreflang="en" href="https://seesaw-earth.github.io/RodentStudio-Tutorials/tst-detector.html"><link rel="alternate" hreflang="zh-CN" href="https://seesaw-earth.github.io/RodentStudio-Tutorials/zh/tst-detector.html"><link rel="icon" href="assets/favicon.png" type="image/png"><link rel="stylesheet" href="assets/styles.css"><link rel="stylesheet" href="assets/tutorial.css"><meta property="og:type" content="article"><meta property="og:title" content="Tutorial 3: The tail-suspension mouse detector · RodentStudio Tutorials"><meta property="og:description" content="What is known about the bundled YOLO11n mouse detector for multi-chamber tail suspension, and which RodentStudio trackers use no neural network."><meta property="og:url" content="https://seesaw-earth.github.io/RodentStudio-Tutorials/tst-detector.html"><meta property="og:image" content="https://seesaw-earth.github.io/RodentStudio-Tutorials/assets/app-icon.png"></head><body><a class="skip-link" href="#main">Skip to content</a><header class="nav-wrap"><nav class="nav shell" aria-label="Main navigation"><a class="brand" href="index.html"><img src="assets/app-icon.png" alt="" width="40" height="40"> RodentStudio Tutorials</a><div class="links"><a href="index.html">Overview</a><a href="mousepose6.html">MousePose6</a><a href="cylinder-v2.html">Cylinder v2</a><a href="tst-detector.html" aria-current="page">TST detector</a><a href="app-integration.html">Into the app</a><a href="citations.html">How to cite</a><a href="https://seesaw-earth.github.io/RodentStudio-Support/">Support site ↗</a><a class="language" href="zh/tst-detector.html" lang="zh-CN">中文</a></div></nav></header><main id="main"><section class="page-head"><div class="shell">
-<div class="eyebrow">TUTORIAL 3 · MOUSEDETECTOR</div>
-<h1>The tail-suspension mouse detector, and the trackers that use no neural network</h1>
-<p>The third bundled model is a small object detector for multi-chamber tail-suspension videos. Its training is the least documented of the three, so this page separates what the package itself records from what is missing.</p>
-</div></section>
-<div class="shell"><article class="article">
-<div class="guide-meta"><span class="badge">YOLO11n detect</span><span class="badge">1 class</span><span class="badge">320 px</span><span class="badge mac">Core ML · FP16 · NMS</span><span class="badge warn">Provenance incomplete</span></div>
-<nav class="toc" aria-label="On this page"><strong>On this page</strong><ol>
-<li><a href="#role">What the detector does in the app</a></li>
-<li><a href="#card">What the package records</a></li>
-<li><a href="#missing">What is not documented</a></li>
-<li><a href="#integration">How the app runs it</a></li>
-<li><a href="#own">Training a detector for your rig</a></li>
-<li><a href="#classic">Trackers without a neural network</a></li>
-<li><a href="#cite">What to cite</a></li>
-</ol></nav>
-
-<h2 id="role">What the detector does in the app</h2>
-<p>In the <em>Tail Suspension Test — Multi-Chamber</em> workflow, one recording shows several mice hanging in neighbouring chambers. The detector finds a box around each mouse in sampled frames. RodentStudio uses those boxes to locate the chambers (from boxes with confidence ≥ 0.35), to pre-select the chambers in which a mouse was seen in at least two sampled frames and, while scanning the video, to find the moment each mouse is suspended. Immobility itself is scored from frame-to-frame motion of the mouse's outline, not by the detector.</p>
-<p>The settings offer three detector modes: <strong>Automatic</strong> (YOLO when a model is available), <strong>YOLO model</strong>, and <strong>Classical</strong> (a dark blob per chamber). A model the user imports takes precedence over the bundled one, and the exports record which detector was actually used.</p>
-
-<h2 id="card">What the package records</h2>
-<div class="table-wrap"><table class="kv">
-<tr><th>Shipped file</th><td><code>MouseDetector.mlpackage</code> (5.14 MiB), in <code>TSTMulti/Models/</code></td></tr>
-<tr><th>Description</th><td>“Ultralytics YOLO11n model trained on …/datasets/tst_mouse/data.yaml”</td></tr>
-<tr><th>Task / classes</th><td>Object detection; <code>names = {0: 'mouse'}</code></td></tr>
-<tr><th>Input</th><td>320 × 320 RGB image, plus two optional numbers, <code>iouThreshold</code> (default 0.7) and <code>confidenceThreshold</code> (default 0.25)</td></tr>
-<tr><th>Outputs</th><td><code>confidence</code> and <code>coordinates</code> (normalized box centre, width, height) after non-maximum suppression</td></tr>
-<tr><th>Export settings</th><td><code>{'batch': 1, 'quantize': 16, 'nms': True, 'dynamic': False}</code> → FP16 weights, Core ML pipeline with an NMS stage</td></tr>
-<tr><th>Software</th><td>Ultralytics 8.4.182, PyTorch 2.14.1 (CUDA 13.0), coremltools 9.0; exported 18 October 2026</td></tr>
-<tr><th>Licence field</th><td>AGPL-3.0 (written by Ultralytics on export)</td></tr>
-</table></div>
-<p class="src">Source: the package's Core ML specification, read with coremltools. Note one oddity: the <code>confidence</code> output declares 80 columns although only one class is named. The app reads results by label name, so this does not affect it, but it is a reminder to inspect a package rather than assume its layout.</p>
-
-<h2 id="missing">What is not documented</h2>
-<div class="notice warn"><strong>Treat this model as unvalidated.</strong> The app's settings say the bundled starter model “was trained on synthetic images from one rig”. The dataset (<code>tst_mouse</code>), the image generator, the training settings and any evaluation are not in the notebooks or source we reviewed. The settings text also mentions fine-tuning scripts in a <code>yolo/</code> folder; that folder is not in the public source tree.</div>
-<p>Until these are published, do not report the detector's accuracy, and check on your own videos that the chambers and suspension onsets it finds are correct. RodentStudio's TST notes also state that the immobility thresholds and segmentation have not been validated against blinded human scoring.</p>
-
-<h2 id="integration">How the app runs it</h2>
-<p>Unlike the two pose models, the detector does not rely on Vision's own resizing. RodentStudio letterboxes each processed (grey, oriented, downscaled) frame itself, centred on a grey (114) background exactly as Ultralytics does during training, and then asks Vision to use the image as is:</p>
-<pre><code>// TSTMulti/Detection/YOLOMouseDetector.swift (condensed)
-let r = min(Double(inputW) / Double(frame.width), Double(inputH) / Double(frame.height))
-let padX = (Double(inputW) - Double(frame.width) * r) / 2
-let padY = (Double(inputH) - Double(frame.height) * r) / 2
-ctx.setFillColor(CGColor(gray: 114.0 / 255.0, alpha: 1))          // Ultralytics' padding colour
-ctx.fill(CGRect(x: 0, y: 0, width: inputW, height: inputH))
-ctx.draw(src, in: CGRect(x: padX, y: padY, width: dw, height: dh))
-request.imageCropAndScaleOption = .scaleFill                      // already the exact input size
-// NMS pipelines take their thresholds as extra inputs:
-vnModel.featureProvider = try? MLDictionaryFeatureProvider(dictionary: [
-    "iouThreshold": MLFeatureValue(double: 0.45),
-    "confidenceThreshold": MLFeatureValue(double: 0.1)])           // low; the app applies its own minimum</code></pre>
-<p>Boxes come back as <code>VNRecognizedObjectObservation</code>s and are mapped to frame pixels with <code>(x − padX) / r</code>. The same class also decodes raw (non-NMS) exports and runs its own NMS, so a lab can import either kind of export.</p>
-
-<h2 id="own">Training a detector for your rig</h2>
-<p>The recipe below is the generic Ultralytics workflow that produces a package of the same kind. It is <em>not</em> the documented recipe of the bundled model, which is unknown.</p>
-<pre><code># data.yaml: one class
-#   path: /data/tst_mouse
-#   train: images/train
-#   val: images/val
-#   names: {0: mouse}
-from ultralytics import YOLO
-model = YOLO('yolo11n.pt')                                   # COCO-pretrained YOLO11 nano detector
-model.train(data='data.yaml', imgsz=320, epochs=100)
-model.export(format='coreml', imgsz=320, quantize=16, nms=True)   # Ultralytics 8.4.x argument names</code></pre>
-<ul>
-<li>Label real frames from your rig, including empty chambers, climbing mice and partial views.</li>
-<li>Split by recording, not by frame, and keep some recordings for testing.</li>
-<li>Report precision and recall on those held-out recordings, then import the <code>.mlpackage</code> in the TST settings.</li>
-</ul>
-
-<h2 id="classic">Trackers without a neural network</h2>
-<p>Not every RodentStudio workflow uses a trained model. These need no model citation, but should be described in methods:</p>
-<ul>
-<li><strong>RodentFlow workflows</strong> (open field, EPM, light–dark box, Y- and T-maze, NOR, water maze, Barnes maze, fear conditioning, place preference) use a classical single-mouse tracker ported from RodentFlow 1.3. Its pipeline is a temporal-median background, absolute difference, adaptive threshold, connected components and a contrast-weighted centroid, sampled at 10 Hz. The source states that no pose estimation, optical flow or neural network is used.</li>
-<li><strong>Classical TST detector</strong>: finds the dark blob in each chamber, used when no YOLO model is available or when chosen in settings.</li>
-</ul>
-
-<h2 id="cite">What to cite</h2>
-<p>If the YOLO detector was used, cite Ultralytics YOLO11 (software) and RodentStudio with its version, and state the detector mode recorded in the export. See the <a href="citations.html#use-detector">citation page</a>.</p>
-<nav class="pager" aria-label="Pages"><a class="prev" href="cylinder-v2.html"><small>← Previous</small>Tutorial 2: Distilling DeepLabCut into CylinderMousePoseV2</a><a class="next" href="app-integration.html"><small>Next →</small>Tutorial 4: From a trained model to Core ML in the app</a></nav>
-</article></div>
-</main><footer class="footer"><div class="shell footer-grid"><div><strong>RodentStudio Tutorials</strong><div><small>© 2026 Ziqing Shi · Developer: Ziqing Shi</small></div><div><small>Independent research software. Model outputs require scientific validation.</small></div></div><div class="footer-links"><a href="https://seesaw-earth.github.io/RodentStudio-Support/">Support site</a><a href="references.bib">references.bib</a><a href="https://github.com/seesaw-earth/RodentStudio-Tutorials">Source on GitHub</a><a href="https://seesaw-earth.github.io/RodentStudio-Support/legal.html">Legal &amp; notices</a></div></div></footer></body></html>
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>RodentFlow has moved</title>
+<meta name="robots" content="noindex">
+<link rel="canonical" href="https://seesaw-earth.github.io/RodentFlow/tutorials/tst-detector.html">
+<script>
+(function () {
+  var map = {};
+  var hash = location.hash.slice(1);
+  var target = "https://seesaw-earth.github.io/RodentFlow/tutorials/tst-detector.html";
+  if (hash && map[hash]) target = map[hash];
+  else if (hash && true) target += "#" + hash;
+  location.replace(target);
+})();
+</script>
+<meta http-equiv="refresh" content="0; url=https://seesaw-earth.github.io/RodentFlow/tutorials/tst-detector.html">
+<style>body{font:16px/1.6 system-ui,-apple-system,"PingFang SC",sans-serif;margin:3rem auto;max-width:36rem;padding:0 1rem;color:#13203B}</style>
+</head>
+<body>
+<p>This page has moved to <a href="https://seesaw-earth.github.io/RodentFlow/tutorials/tst-detector.html">https://seesaw-earth.github.io/RodentFlow/tutorials/tst-detector.html</a></p>
+</body>
+</html>
